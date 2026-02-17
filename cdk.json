@@ -16,6 +16,11 @@
     ]
   },
   "context": {
+    "IDENTITY_CENTER_INSTANCE_ARN": "arn:aws:sso:::instance/ssoins-72236895b9cba9ed",
+    "QUICK_SUITE_ACCOUNT_NAME": "QuickSuiteStarterKit",
+    "QUICK_SUITE_ADMIN_EMAIL": "tomron@amazon.com",
+    "QUICK_SUITE_ADMIN_GROUP_NAME": "QuickSuiteAdmins",
+    "IDENTITY_STORE_ID" : "d-9067f9bef9",
     "@aws-cdk/core:addConstructMetadataFailed": true,
     "@aws-cdk/aws-signer:signingProfileNamePassedToCfn": true,
     "@aws-cdk/aws-ecs-patterns:secGroupsDisablesImplicitOpenListener": true,
