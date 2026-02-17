@@ -11,10 +11,13 @@ from botocore.exceptions import ClientError
 from common.observability import logger
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-sso_admin = boto3.client("sso-admin")
-identitystore = boto3.client("identitystore")
-quicksight = boto3.client("quicksight")
-sts = boto3.client("sts")
+import os
+
+region = os.environ.get("AWS_REGION", "us-east-1")
+sso_admin = boto3.client("sso-admin", region_name=region)
+identitystore = boto3.client("identitystore", region_name=region)
+quicksight = boto3.client("quicksight", region_name=region)
+sts = boto3.client("sts", region_name=region)
 
 
 class QuickSuiteGroup(Enum):

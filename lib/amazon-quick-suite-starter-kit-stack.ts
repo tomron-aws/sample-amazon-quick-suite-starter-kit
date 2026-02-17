@@ -18,6 +18,9 @@ export class AmazonQuickSuiteStarterKitStack extends Stack {
     const identityCenterArn = this.node.tryGetContext(
       'IDENTITY_CENTER_INSTANCE_ARN',
     );
+    const identityCenterStoreId = this.node.tryGetContext(
+      'IDENTITY_STORE_ID',
+    );
     const accountName =
       this.node.tryGetContext('QUICK_SUITE_ACCOUNT_NAME') ||
       'QuickSuiteStarterKit';
@@ -31,7 +34,7 @@ export class AmazonQuickSuiteStarterKitStack extends Stack {
     let instanceArn: string;
 
     if (identityCenterArn) {
-      identityStoreId = identityCenterArn;
+      identityStoreId = identityCenterStoreId;
       instanceArn = identityCenterArn;
     } else {
       const identityCenterInstance = new CfnInstance(
