@@ -1,0 +1,33 @@
+{
+  "context": {
+    "IDENTITY_CENTER_INSTANCE_ARN": "arn:aws:sso:::instance/ssoins-xxxxx",
+    "IDENTITY_STORE_ID": "d-xxxxxxxxxx",
+    "QUICK_SUITE_ACCOUNT_NAME": "MyCompanyQuickSuite",
+    "QUICK_SUITE_ADMIN_EMAIL": "quicksuite-admin@mycompany.com",
+    "QUICK_SUITE_ADMIN_GROUP_NAME": "QUICK_SUITE_ADMIN",
+    
+    "QUICK_SUITE_ADMIN_USER": {
+      "username": "admin",
+      "email": "admin@mycompany.com",
+      "givenName": "Admin",
+      "familyName": "User"
+    },
+    
+    "QUICK_SUITE_ADDITIONAL_USERS": [
+      {
+        "username": "analyst1",
+        "email": "analyst1@mycompany.com",
+        "givenName": "Jane",
+        "familyName": "Analyst",
+        "group": "QUICK_SUITE_ENTERPRISE"
+      },
+      {
+        "username": "viewer1",
+        "email": "viewer1@mycompany.com",
+        "givenName": "John",
+        "familyName": "Viewer",
+        "group": "QUICK_SUITE_PRO"
+      }
+    ]
+  }
+}

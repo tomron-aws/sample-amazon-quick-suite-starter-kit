@@ -15,6 +15,7 @@ dependencies = [
 
 [project.scripts]
 manage-users = "manage_users:cli"
+manage-scim-groups = "manage_scim_groups:cli"
 monitor = "monitor:cli"
 
 [project.optional-dependencies]
