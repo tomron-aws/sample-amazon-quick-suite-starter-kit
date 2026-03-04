@@ -15,38 +15,26 @@ export class AmazonQuickSuiteStarterKitStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const identityCenterArn = this.node.tryGetContext(
+    const identityCenterInstanceArn = this.node.tryGetContext(
       'IDENTITY_CENTER_INSTANCE_ARN',
     );
-    const identityCenterStoreId = this.node.tryGetContext(
-      'IDENTITY_STORE_ID',
-    );
+    const identityStoreId = this.node.tryGetContext('IDENTITY_STORE_ID');
     const accountName =
       this.node.tryGetContext('QUICK_SUITE_ACCOUNT_NAME') ||
       'QuickSuiteStarterKit';
-    const adminEmail =
-      this.node.tryGetContext('QUICK_SUITE_ADMIN_EMAIL') || 'admin@example.com';
-    const adminGroupName =
-      this.node.tryGetContext('QUICK_SUITE_ADMIN_GROUP_NAME') ||
-      'QUICK_SUITE_ADMIN';
+    const adminUserEmail =
+      this.node.tryGetContext('QUICK_SUITE_ADMIN_USER_EMAIL') ||
+      'admin@example.com';
+    const adminProGroupName =
+      this.node.tryGetContext('QUICK_SUITE_ADMIN_PRO_GROUP') ||
+      'QuickSuiteAdminPro';
+    const groupRoleMappings =
+      this.node.tryGetContext('QUICK_SUITE_GROUP_ROLE_MAPPINGS') || [];
 
-    let identityStoreId: string;
-    let instanceArn: string;
-
-    if (identityCenterArn) {
-      identityStoreId = identityCenterStoreId;
-      instanceArn = identityCenterArn;
-    } else {
-      const identityCenterInstance = new CfnInstance(
-        this,
-        `${RESOURCE_PREFIX}IdentityCenterInstance`,
-        {
-          name: `${RESOURCE_PREFIX}IdC`,
-        },
+    if (!identityCenterInstanceArn || !identityStoreId) {
+      throw new Error(
+        'IDENTITY_CENTER_INSTANCE_ARN and IDENTITY_STORE_ID must be provided in cdk.json context when using external identity provider',
       );
-
-      identityStoreId = identityCenterInstance.attrIdentityStoreId;
-      instanceArn = identityCenterInstance.attrInstanceArn;
     }
 
     const quickSuiteSetupFunction = new LambdaFunction(
@@ -105,7 +93,7 @@ export class AmazonQuickSuiteStarterKitStack extends Stack {
       new PolicyStatement({
         effect: Effect.ALLOW,
         actions: ['sso:DescribeInstance', 'sso:ListInstances'],
-        resources: [instanceArn],
+        resources: [identityCenterInstanceArn],
       }),
     );
 
@@ -182,12 +170,30 @@ export class AmazonQuickSuiteStarterKitStack extends Stack {
         actions: [
           'identitystore:DescribeUser',
           'identitystore:ListUsers',
+          'identitystore:CreateUser',
           'identitystore:CreateGroup',
           'identitystore:DescribeGroup',
+          'identitystore:CreateGroupMembership',
+          'identitystore:ListGroupMemberships',
         ],
         resources: [
           `arn:aws:identitystore::${this.account}:identitystore/${identityStoreId}`,
+          `arn:aws:identitystore:::user/*`,
+          `arn:aws:identitystore:::group/*`,
+          `arn:aws:identitystore:::membership/*`,
         ],
+      }),
+    );
+
+    quickSuiteSetupFunction.addToRolePolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: [
+          'quicksight:CreateRoleMembership',
+          'quicksight:DeleteRoleMembership',
+          'quicksight:ListRoleMemberships',
+        ],
+        resources: ['*'],
       }),
     );
 
@@ -218,11 +224,12 @@ export class AmazonQuickSuiteStarterKitStack extends Stack {
     new CustomResource(this, `${RESOURCE_PREFIX}QuickSuiteSetup`, {
       serviceToken: provider.serviceToken,
       properties: {
-        IdentityCenterInstanceArn: instanceArn,
+        IdentityCenterInstanceArn: identityCenterInstanceArn,
         IdentityStoreId: identityStoreId,
         AccountName: accountName,
-        AdminEmail: adminEmail,
-        AdminGroupName: adminGroupName,
+        AdminUserEmail: adminUserEmail,
+        AdminProGroupName: adminProGroupName,
+        GroupRoleMappings: JSON.stringify(groupRoleMappings),
         ForceUpdate: Date.now().toString(),
       },
     });

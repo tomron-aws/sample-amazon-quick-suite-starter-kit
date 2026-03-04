@@ -1,0 +1,19 @@
+{
+  "context": {
+    "IDENTITY_CENTER_INSTANCE_ARN": "arn:aws:sso:::instance/ssoins-xxxxxxxxxxxxx",
+    "IDENTITY_STORE_ID": "d-xxxxxxxxxx",
+    "QUICK_SUITE_ACCOUNT_NAME": "MyCompanyQuickSuite",
+    "QUICK_SUITE_ADMIN_USER_EMAIL": "admin@example.com",
+    "QUICK_SUITE_ADMIN_PRO_GROUP": "QuickSuiteAdminPro",
+    "QUICK_SUITE_GROUP_ROLE_MAPPINGS": [
+      {
+        "groupName": "QuickSuiteAuthors",
+        "role": "AUTHOR_PRO"
+      },
+      {
+        "groupName": "QuickSuiteReaders",
+        "role": "READER_PRO"
+      }
+    ]
+  }
+}
