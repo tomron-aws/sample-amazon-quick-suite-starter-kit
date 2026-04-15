@@ -1,0 +1,10 @@
+name: permissions
+version: 0.1.0
+iac_type: cdk
+dependencies: []
+params:
+  - name: identity_store_id
+    required: true
+artifacts:
+  - cfn-template.yaml
+  - terraform/main.tf

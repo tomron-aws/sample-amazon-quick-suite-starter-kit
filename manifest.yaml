@@ -1,0 +1,24 @@
+# Quick Suite Starter Kit — Project Manifest
+# Consultants: edit this file to select modules for your customer engagement.
+
+project: my-quick-suite-deployment
+
+modules:
+  - governance/subscription
+  # - governance/permissions
+  # - governance/themes
+  # - data-sources/redshift
+  # - data-sources/athena
+  # - data-sources/glue
+  # - use-case-accelerators/idp-accelerator@v1.0.0
+  # - use-case-accelerators/live-meeting-assistant@v1.0.0
+  # - agentcore-agents/agent1
+  # - agentcore-agents/agent2
+
+params:
+  identity_center_instance_arn: ""
+  identity_store_id: ""
+  account_name: QuickSuiteStarterKit
+  admin_user_email: ""
+  admin_pro_group: ""
+  region: us-east-1

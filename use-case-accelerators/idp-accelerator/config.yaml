@@ -1,0 +1,11 @@
+name: idp-accelerator
+version: 0.1.0
+iac_type: external
+dependencies:
+  - governance/subscription
+params:
+  - name: document_bucket
+    required: true
+artifacts:
+  - cfn-template.yaml
+  - terraform/main.tf

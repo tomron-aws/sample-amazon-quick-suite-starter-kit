@@ -6,3 +6,15 @@ node_modules
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Generated
+templates/customer-project/tf-app/
+
+# OS
+.DS_Store

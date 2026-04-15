@@ -1,0 +1,23 @@
+name: subscription
+version: 0.1.0
+iac_type: cdk
+dependencies:
+  - core/custom-resources
+params:
+  - name: identity_center_instance_arn
+    required: true
+  - name: identity_store_id
+    required: true
+  - name: account_name
+    required: false
+    default: QuickSuiteStarterKit
+  - name: admin_user_email
+    required: true
+  - name: admin_pro_group
+    required: true
+  - name: group_role_mappings
+    required: false
+    default: "[]"
+artifacts:
+  - cfn-template.yaml
+  - terraform/main.tf

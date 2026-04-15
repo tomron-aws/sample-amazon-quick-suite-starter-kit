@@ -1,0 +1,11 @@
+name: redshift
+version: 0.1.0
+iac_type: cdk
+dependencies:
+  - governance/subscription
+params:
+  - name: redshift_cluster_id
+    required: true
+artifacts:
+  - cfn-template.yaml
+  - terraform/main.tf
