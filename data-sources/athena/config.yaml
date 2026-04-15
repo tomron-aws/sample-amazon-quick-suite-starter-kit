@@ -1,0 +1,12 @@
+name: athena
+version: 0.1.0
+iac_type: cdk
+dependencies:
+  - governance/subscription
+params:
+  - name: athena_workgroup
+    required: false
+    default: primary
+artifacts:
+  - cfn-template.yaml
+  - terraform/main.tf

@@ -1,0 +1,17 @@
+# Customer Project Manifest — copy to repo root and customize
+project: acme-analytics-platform
+
+modules:
+  - governance/subscription
+  # - governance/permissions
+  # - data-sources/redshift
+  # - use-case-accelerators/idp-accelerator@v1.0.0
+  # - agentcore-agents/agent1
+
+params:
+  identity_center_instance_arn: "arn:aws:sso:::instance/ssoins-XXXXX"
+  identity_store_id: "d-XXXXX"
+  account_name: AcmeQuickSuite
+  admin_user_email: "admin@example.com"
+  admin_pro_group: "QuickSuiteAdminPro"
+  region: us-east-1

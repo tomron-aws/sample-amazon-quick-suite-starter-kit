@@ -13,9 +13,9 @@ export default [
       '*.generated.ts',
       'coverage',
       'cdk.out/',
-      'lambdas/',
+      'core/custom-resources/',
+      'core/utils/',
       '**/*.d.ts',
-      'operator_tools/'
     ],
   },
   {

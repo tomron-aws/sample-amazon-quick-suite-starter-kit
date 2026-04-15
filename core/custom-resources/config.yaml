@@ -1,0 +1,5 @@
+name: custom-resources
+version: 0.1.0
+iac_type: cdk
+dependencies: []
+params: []

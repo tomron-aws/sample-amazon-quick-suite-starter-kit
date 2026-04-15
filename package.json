@@ -2,7 +2,7 @@
   "name": "amazon-quick-suite-starter-kit",
   "version": "0.1.0",
   "bin": {
-    "amazon-quick-suite-starter-kit": "lib/app.js"
+    "amazon-quick-suite-starter-kit": "templates/customer-project/cdk-app/bin/app.js"
   },
   "scripts": {
     "build": "tsc",
@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^5.7.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.10.1",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
     "@typescript-eslint/parser": "^8.53.0",
@@ -30,6 +31,7 @@
   },
   "dependencies": {
     "aws-cdk-lib": "^2.232.2",
-    "constructs": "^10.0.0"
+    "constructs": "^10.0.0",
+    "js-yaml": "^4.1.0"
   }
 }
