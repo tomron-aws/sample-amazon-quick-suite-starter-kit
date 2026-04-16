@@ -1,27 +1,75 @@
 # Cleanup and Deletion
 
-This guide explains how to properly remove your Amazon Quick Suite deployment to avoid ongoing costs.
+This guide explains how to properly remove your Amazon Quick Suite deployment to avoid ongoing costs and orphaned resources.
 
-## Cleanup Process
+## Why manual cleanup is required
 
-To remove all resources:
+The CloudFormation custom resource handler intentionally does **not** delete the QuickSight subscription during stack deletion. QuickSight subscriptions contain dashboards, datasets, analyses, and user configurations that cannot be recovered once deleted. This is a safety measure to prevent accidental data loss.
 
-1. **Delete the Quick Suite subscription** - Use the [Amazon QuickSight console](https://console.aws.amazon.com/quicksight/) or AWS CLI command `aws quicksight delete-account-subscription` to delete the subscription. This must be done before destroying the stack.
+When you run `cdk destroy`, the Lambda handler will log a warning with the exact cleanup steps. You can find these in CloudWatch Logs under the `/aws/lambda/QuickSuiteStarterKitQuickSuiteSetupFunction` log group.
 
-2. **Destroy the CDK stack** - Run `npm run cdk destroy` to remove the Lambda function, IAM roles, and other infrastructure.
+## Cleanup steps
 
-3. **Remove IAM Identity Center groups** (optional) - Use the [IAM Identity Center console](https://console.aws.amazon.com/singlesignon) or AWS CLI to delete groups created during setup if no longer needed.
+### 1. Delete the QuickSight subscription
 
-## Important Notes
+This must be done **before** destroying the CDK stack (the stack's IAM roles are needed for the API call).
 
-The custom resource handler does not automatically delete the Quick Suite subscription during stack deletion to prevent accidental data loss. You must delete the subscription separately before running `npm run cdk destroy`.
+```bash
+# Get your account ID
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
-[AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/) groups are not automatically deleted and will remain in your Identity Center instance after stack deletion.
+# Delete the subscription
+aws quicksight delete-account-subscription --aws-account-id "$ACCOUNT_ID"
+```
 
-## Next Steps
+Alternatively, use the [QuickSight console](https://console.aws.amazon.com/quicksight/) to unsubscribe.
 
-After cleanup, you may want to:
+### 2. Destroy the CDK stack
 
-- Review your [AWS billing dashboard](https://console.aws.amazon.com/billing/) to confirm all charges have stopped
-- Remove any remaining CloudWatch log groups if desired
-- Delete the CDK bootstrap stack if you're not using CDK for other projects
+```bash
+npx cdk destroy --all
+```
+
+This removes the Lambda function, IAM roles, custom resource provider, and other infrastructure.
+
+### 3. Remove IAM Identity Center groups (optional)
+
+Groups created during setup are not automatically deleted. Remove them if no longer needed:
+
+```bash
+# List groups to find IDs
+aws identitystore list-groups --identity-store-id <your-identity-store-id>
+
+# Delete each group
+aws identitystore delete-group \
+  --identity-store-id <your-identity-store-id> \
+  --group-id <group-id>
+```
+
+### 4. Clean up CloudWatch log groups (optional)
+
+```bash
+aws logs delete-log-group \
+  --log-group-name /aws/lambda/QuickSuiteStarterKitQuickSuiteSetupFunction
+```
+
+## Verifying cleanup
+
+After completing all steps, verify no resources remain:
+
+```bash
+# Confirm subscription is gone
+aws quicksight describe-account-subscription \
+  --aws-account-id "$ACCOUNT_ID" 2>&1 | grep -q "ResourceNotFoundException" && \
+  echo "✓ Subscription deleted" || echo "⚠ Subscription still active"
+
+# Confirm stack is gone
+aws cloudformation describe-stacks \
+  --stack-name "my-quick-suite-deployment-stack" 2>&1 | grep -q "does not exist" && \
+  echo "✓ Stack deleted" || echo "⚠ Stack still exists"
+```
+
+## See also
+
+- [Monitoring Runbook](operator-tools/monitoring-runbook.md) — check account status before cleanup
+- [User Management Runbook](operator-tools/user-management-runbook.md) — manage users before deletion

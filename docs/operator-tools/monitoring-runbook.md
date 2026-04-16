@@ -13,6 +13,21 @@ The `monitor` tool provides visibility into Quick Suite users, groups, and accou
 
 ## Tools
 
+### Deployment status and drift detection
+
+Check all deployed modules for configuration drift:
+
+```bash
+./status.sh
+```
+
+This runs the appropriate check per module type:
+
+- CDK modules: `cdk diff` (shows what would change)
+- Terraform modules: `terraform plan -detailed-exitcode` (shows drift from state)
+- External modules: calls `status.sh` if provided by the accelerator
+- Config-only modules: calls `status.py` if provided
+
 ### account-summary
 
 Displays Quick Suite account overview with user counts and role distribution.

@@ -1,11 +1,14 @@
 name: redshift
 version: 0.1.0
-iac_type: cdk
+status: preview
+iac_type: terraform
 dependencies:
   - governance/subscription
 params:
   - name: redshift_cluster_id
     required: true
+    type: string
+    pattern: "^[a-zA-Z][a-zA-Z0-9-]*$"
 artifacts:
   - cfn-template.yaml
   - terraform/main.tf

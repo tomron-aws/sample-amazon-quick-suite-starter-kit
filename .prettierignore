@@ -2,5 +2,5 @@ node_modules/
 cdk.out/
 coverage/
 *.d.ts
-lambdas/
-operator_tools/
+core/custom-resources/lambdas/
+core/utils/

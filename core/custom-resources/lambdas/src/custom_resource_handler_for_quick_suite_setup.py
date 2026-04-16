@@ -159,10 +159,41 @@ def update(event: dict[str, Any], _context: LambdaContext) -> str:
 
 
 @helper.delete
-def delete(_event: dict[str, Any], _context: LambdaContext) -> None:
-    """Delete called - Quick Suite subscription must be deleted manually."""
-    logger.info("Delete called - Quick Suite subscription must be deleted manually")
-    logger.info("See documentation for manual deletion instructions")
+def delete(event: dict[str, Any], _context: LambdaContext) -> None:
+    """Delete called — Quick Suite subscription is NOT auto-deleted to prevent data loss.
+
+    QuickSight subscriptions contain dashboards, datasets, and analyses that cannot
+    be recovered once deleted. Operators must delete the subscription manually before
+    or after stack deletion.
+
+    See: docs/cleanup.md for the full cleanup procedure.
+    """
+    account_id = event["StackId"].split(":")[4]
+
+    # Check if subscription is still active and warn loudly
+    subscription_active = check_quicksight_subscription_exists(account_id)
+
+    if subscription_active:
+        logger.warning(
+            "ORPHANED RESOURCE: QuickSight subscription is still active and will NOT be deleted automatically. "
+            "This is intentional to prevent accidental data loss. "
+            "To clean up, follow these steps: "
+            "(1) Delete the subscription via the QuickSight console or "
+            "'aws quicksight delete-account-subscription --aws-account-id %s', "
+            "(2) Remove IAM Identity Center groups if no longer needed. "
+            "See docs/cleanup.md for the full procedure.",
+            account_id,
+            extra={
+                "account_id": account_id,
+                "subscription_active": True,
+                "action_required": "manual_cleanup",
+            },
+        )
+    else:
+        logger.info(
+            "QuickSight subscription is not active — no orphaned resources",
+            extra={"account_id": account_id, "subscription_active": False},
+        )
 
 
 @logger.inject_lambda_context

@@ -1,24 +1,29 @@
 # Quick Suite Starter Kit — Project Manifest
 # Consultants: edit this file to select modules for your customer engagement.
+#
+# Module status:
+#   ready   — production-ready, fully implemented
+#   preview — functional but not production-hardened, use with caution
+#   planned — not yet implemented, will error if selected
 
 project: my-quick-suite-deployment
 
 modules:
-  - governance/subscription
-  # - governance/permissions
-  # - governance/themes
-  # - data-sources/redshift
-  # - data-sources/athena
-  # - data-sources/glue
-  # - use-case-accelerators/idp-accelerator@v1.0.0
-  # - use-case-accelerators/live-meeting-assistant@v1.0.0
-  # - agentcore-agents/agent1
-  # - agentcore-agents/agent2
+  - governance/subscription                              # ready
+  # - governance/permissions                             # preview
+  # - governance/themes                                  # planned
+  # - data-sources/redshift                              # preview
+  # - data-sources/athena                                # preview
+  # - data-sources/glue                                  # preview
+  # - use-case-accelerators/idp-accelerator@v1.0.0      # preview
+  # - use-case-accelerators/live-meeting-assistant@v1.0.0  # planned
+  # - agentcore-agents/agent1                            # planned
+  # - agentcore-agents/agent2                            # planned
 
 params:
-  identity_center_instance_arn: ""
-  identity_store_id: ""
+  identity_center_instance_arn: ""   # or "ssm:/quicksuite/identity_center_arn"
+  identity_store_id: ""              # or "ssm:/quicksuite/identity_store_id"
   account_name: QuickSuiteStarterKit
-  admin_user_email: ""
+  admin_user_email: ""               # or "secretsmanager:quicksuite/admin-email"
   admin_pro_group: ""
-  region: us-east-1
+  region: us-east-1                  # or "env:AWS_REGION"

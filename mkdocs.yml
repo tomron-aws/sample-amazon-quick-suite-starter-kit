@@ -25,6 +25,8 @@ nav:
     - User Management Runbook: operator-tools/user-management-runbook.md
     - Monitoring Runbook: operator-tools/monitoring-runbook.md
   - Cleanup: cleanup.md
+  - Accelerator Integration: accelerator-integration-guide.md
+  - Module Development: module-development-guide.md
 
 markdown_extensions:
   - admonition

@@ -253,6 +253,8 @@ python3 core/utils/orchestrator.py deploy-config
 | Testing | Each module owns `tests/` | Module independence |
 | IaC parity | Not required — CFN bridge for CDK modules | Don't force TF shops to install CDK |
 | Custom resources | Centralized in `core/custom-resources/` | Avoid duplication across modules |
+| Accelerator integration | Deploy-script (Standard) default, CDK shim (Deep) as upgrade | Don't force accelerator teams to provide CDK/TF parity |
+| Accelerator IaC parity | Not required for Standard tier | Accelerators use their own IaC; parity only if they opt into Deep integration |
 
 ---
 
@@ -260,8 +262,8 @@ python3 core/utils/orchestrator.py deploy-config
 
 - [x] Inventory existing `lib/` stack to determine exact module split
 - [x] Identify which Lambdas map to which modules vs. core
-- [ ] Define CI pipeline for auto-generating `cfn-template.yaml` per CDK module
-- [ ] Decide on module param validation schema (JSON Schema? custom?)
-- [ ] Determine if `orchestrator.py` needs dependency ordering (topological sort) or if flat is fine
+- [x] Define CI pipeline for auto-generating `cfn-template.yaml` per CDK module
+- [x] Decide on module param validation schema (JSON Schema? custom?) — custom type validators in orchestrator
+- [x] Determine if `orchestrator.py` needs dependency ordering (topological sort) or if flat is fine — topological sort implemented
 - [ ] Identify first external accelerator to git subtree as a proof of concept
-- [ ] Remove old `lib/`, `lambdas/`, `operator_tools/` directories after migration verified
+- [x] Remove old `lib/`, `lambdas/`, `operator_tools/` directories after migration verified

@@ -26,6 +26,10 @@ Contributions via pull requests are much appreciated. Before sending us a pull r
 2. You check existing open, and recently merged, pull requests to make sure someone else hasn't addressed the problem already.
 3. You open an issue to discuss any significant work - we would hate for your time to be wasted.
 
+### Adding a new module
+
+If you're contributing a new module (data source, governance feature, etc.), follow the [Module Development Guide](docs/module-development-guide.md) for the step-by-step workflow. For external accelerators, see the [Accelerator Integration Guide](docs/accelerator-integration-guide.md).
+
 To send us a pull request, please:
 
 1. Fork the repository.

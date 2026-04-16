@@ -8,7 +8,7 @@ The `manage-users` tool manages AWS IAM Identity Center users and groups, and as
 
 !!! info "Using Custom Group Names"
 
-    This tool uses default group names: `QUICK_SUITE_ADMIN`, `QUICK_SUITE_ENTERPRISE`, and `QUICK_SUITE_PRO`. If you have custom group names from your federated identity provider, modify the `QuickSuiteGroup` enum and `QUICKSIGHT_ROLE_MAPPING` dictionary in `operator_tools/src/manage_users.py` before using these tools.
+    This tool uses default group names: `QUICK_SUITE_ADMIN`, `QUICK_SUITE_ENTERPRISE`, and `QUICK_SUITE_PRO`. If you have custom group names from your federated identity provider, modify the `QuickSuiteGroup` enum and `QUICKSIGHT_ROLE_MAPPING` dictionary in `core/utils/src/manage_users.py` before using these tools.
 
 ## Prerequisites
 

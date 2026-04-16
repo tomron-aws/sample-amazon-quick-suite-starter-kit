@@ -5,6 +5,7 @@ Shared CloudFormation custom resource Lambda handlers used by CDK modules.
 ## Contents
 
 - `lambdas/src/custom_resource_handler_for_quick_suite_setup.py` — Quick Suite subscription setup (used by `governance/subscription`)
+- `lambdas/src/common/observability.py` — Shared observability utilities (Powertools)
 
 ## For module authors
 

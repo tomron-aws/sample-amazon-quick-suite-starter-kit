@@ -1,4 +1,4 @@
-.PHONY: build format lint validate
+.PHONY: build format lint test validate
 
 build:
 	@echo "Building Python package..."
@@ -12,5 +12,9 @@ lint:
 	@echo "Linting Python code..."
 	uv run ruff check src/ --fix
 
-validate: format lint build
+test:
+	@echo "Running tests..."
+	uv run pytest tests/ -v
+
+validate: format lint build test
 	@echo "✓ All checks passed!"

@@ -25,3 +25,14 @@ Use this runbook for:
 - Listing users and their roles
 - Checking group memberships
 - Tracking active vs inactive users
+
+### [Cleanup and Deletion](../cleanup.md)
+
+Safely remove your Quick Suite deployment without leaving orphaned resources.
+
+Use this runbook for:
+
+- Deleting the QuickSight subscription
+- Destroying the CDK stack
+- Removing IAM Identity Center groups
+- Verifying all resources are cleaned up

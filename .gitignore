@@ -6,6 +6,7 @@ node_modules
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+cdk.context.json
 
 # Python
 __pycache__/
@@ -15,6 +16,8 @@ __pycache__/
 
 # Generated
 templates/customer-project/tf-app/
+.deploy-state.json
+logs/
 
 # OS
 .DS_Store

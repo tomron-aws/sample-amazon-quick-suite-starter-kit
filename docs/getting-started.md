@@ -21,16 +21,38 @@ This guide walks you through deploying Amazon Quick Suite with [AWS IAM Identity
 npm install
 ```
 
-## Step 2: Configure Deployment (Optional)
+## Step 2: Configure Your Deployment
 
-You can customize the deployment via `cdk.json` context or command line parameters:
+Edit `manifest.yaml` to select modules and set parameters for your customer engagement:
+
+```yaml
+project: acme-analytics-platform
+
+modules:
+  - governance/subscription
+  - governance/permissions
+  # Uncomment modules as needed:
+  # - data-sources/redshift
+  # - data-sources/athena
+
+params:
+  identity_center_instance_arn: "arn:aws:sso:::instance/ssoins-xxxxx"
+  identity_store_id: "d-xxxxxxxxxx"
+  account_name: MyCompanyQuickSuite
+  admin_user_email: quicksuite-admin@mycompany.com
+  admin_pro_group: QuickSuiteAdmins
+  region: us-east-1
+```
 
 ### Configuration Options
 
-**IDENTITY_CENTER_INSTANCE_ARN** (optional)  
-Existing [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/) instance ARN. If not provided, a new instance will be created.
+**identity_center_instance_arn** (required)
+Existing [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/) instance ARN.
 
-**QUICK_SUITE_ACCOUNT_NAME** (default: `QuickSuiteStarterKit`)  
+**identity_store_id** (required)
+Identity Store ID associated with your IAM Identity Center instance.
+
+**account_name** (default: `QuickSuiteStarterKit`)
 Display name for your Quick Suite account.
 
 !!! danger "Important"
@@ -38,43 +60,55 @@ Display name for your Quick Suite account.
     - End users must type this name when signing in - choose wisely!
     - **Cannot be changed** after account creation
     - Must be **globally unique** across all AWS accounts
-    - Length: 1-62 characters
-    - Must start with a letter or digit
-    - Can contain letters, digits, and hyphens
-    - Cannot end with a hyphen
 
-**QUICK_SUITE_ADMIN_EMAIL** (default: `admin@example.com`)  
-Email address for Quick Suite admin notifications. Please choose a real email to get important updates concerning your account.
+**admin_user_email** (required)
+Email address for Quick Suite admin notifications.
 
-**QUICK_SUITE_ADMIN_GROUP_NAME** (default: `QUICK_SUITE_ADMIN`)  
-Name of the [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/) group for Quick Suite administrators. This group is automatically created during deployment if it does not exist and is mapped to the Admin Pro role.
+**admin_pro_group** (required)
+Name of the [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/) group for Quick Suite administrators.
 
-### Example Configuration
+### Using secrets references (recommended for CI/CD)
 
-=== "cdk.json"
+Instead of putting sensitive values directly in `manifest.yaml`, you can reference them from external sources:
 
-    ```json
-    {
-      "context": {
-        "IDENTITY_CENTER_INSTANCE_ARN": "arn:aws:sso:::instance/ssoins-xxxxx",
-        "QUICK_SUITE_ACCOUNT_NAME": "MyCompanyQuickSuite",
-        "QUICK_SUITE_ADMIN_EMAIL": "quicksuite-admin@mycompany.com",
-        "QUICK_SUITE_ADMIN_GROUP_NAME": "QuickSuiteAdmins"
-      }
-    }
-    ```
+```yaml
+params:
+  # From SSM Parameter Store (recommended for shared config)
+  identity_center_instance_arn: "ssm:/quicksuite/identity_center_arn"
+  identity_store_id: "ssm:/quicksuite/identity_store_id"
 
-=== "Command Line"
+  # From Secrets Manager (recommended for credentials/emails)
+  admin_user_email: "secretsmanager:quicksuite/admin-email"
 
-    ```bash
-    npm run cdk deploy \
-      -c IDENTITY_CENTER_INSTANCE_ARN=arn:aws:sso:::instance/ssoins-xxxxx \
-      -c QUICK_SUITE_ACCOUNT_NAME=MyCompanyQuickSuite \
-      -c QUICK_SUITE_ADMIN_EMAIL=quicksuite-admin@mycompany.com \
-      -c QUICK_SUITE_ADMIN_GROUP_NAME=QuickSuiteAdmins
-    ```
+  # From environment variables (useful in CI pipelines)
+  region: "env:AWS_REGION"
 
-## Step 3: Bootstrap AWS Account
+  # Plaintext (fine for non-sensitive values)
+  account_name: MyCompanyQuickSuite
+```
+
+Supported prefixes:
+
+| Prefix | Source | Use for |
+|---|---|---|
+| `ssm:/path` | SSM Parameter Store | ARNs, IDs, shared config |
+| `secretsmanager:name` | Secrets Manager | Emails, credentials |
+| `env:VAR_NAME` | Environment variable | CI pipeline values |
+| (no prefix) | Plaintext in manifest | Non-sensitive defaults |
+
+The resolver runs automatically before validation. Resolved values are masked in output for security.
+
+## Step 3: Estimate costs (optional)
+
+Before deploying, review the estimated costs for your selected modules:
+
+```bash
+./cost.sh
+```
+
+This shows QuickSight per-user licensing costs and infrastructure costs per module. If you have `infracost` installed, it provides a detailed IaC cost breakdown.
+
+## Step 4: Bootstrap AWS Account
 
 If you haven't already bootstrapped your AWS account for CDK:
 
@@ -85,7 +119,15 @@ npx cdk bootstrap
 ## Step 4: Deploy Infrastructure
 
 ```bash
-npm run cdk deploy
+./deploy.sh
+```
+
+This runs the bootstrap (prerequisites check, manifest validation) and then deploys modules in dependency order. You'll be prompted to approve infrastructure changes.
+
+For CI pipelines or non-interactive environments:
+
+```bash
+./deploy.sh --auto-approve
 ```
 
 This deployment will:
@@ -128,7 +170,7 @@ This setting allows users created via API to receive a verification email on the
 Navigate to the operator tools directory:
 
 ```bash
-cd operator_tools
+cd core/utils
 ```
 
 ### Create Your First Admin User

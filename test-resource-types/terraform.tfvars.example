@@ -1,0 +1,5 @@
+region               = "us-east-1"
+account_name         = "my-quicksight-account"
+notification_email   = "admin@example.com"
+admin_pro_group_name = "QuickSightAdmins"
+reader_pro_group_names = ["ReaderGroup1", "ReaderGroup2"]

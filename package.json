@@ -1,17 +1,11 @@
 {
   "name": "amazon-quick-suite-starter-kit",
   "version": "0.1.0",
-  "bin": {
-    "amazon-quick-suite-starter-kit": "templates/customer-project/cdk-app/bin/app.js"
-  },
   "scripts": {
     "build": "tsc",
-    "watch": "tsc -w",
-    "cdk": "cdk",
     "lint": "eslint --config eslint.config.mjs . --fix",
     "lint:md": "markdownlint-cli2 --fix \"**/*.md\"",
-    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
-    "validate": "npm run format && npm run lint && npm run lint:md && npm run build"
+    "format": "prettier --write \"**/*.{ts,js,json,md}\""
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^5.7.0",
@@ -20,6 +14,7 @@
     "@typescript-eslint/eslint-plugin": "^8.53.0",
     "@typescript-eslint/parser": "^8.53.0",
     "aws-cdk": "2.1100.3",
+    "aws-cdk-lib": "^2.232.2",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",

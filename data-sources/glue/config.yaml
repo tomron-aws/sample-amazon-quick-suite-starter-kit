@@ -1,11 +1,14 @@
 name: glue
 version: 0.1.0
-iac_type: cdk
+status: preview
+iac_type: terraform
 dependencies:
   - governance/subscription
 params:
   - name: glue_database
     required: true
+    type: string
+    pattern: "^[a-zA-Z0-9_-]+$"
 artifacts:
   - cfn-template.yaml
   - terraform/main.tf
