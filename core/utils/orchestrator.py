@@ -309,6 +309,18 @@ def generate_terraform(modules: list[str], manifest: dict) -> Path:
             main_lines.append(f'  depends_on = [{", ".join(dep_refs)}]')
         main_lines.append("}")
         main_lines.append("")
+
+    # Add outputs for all module outputs
+    for mod in modules:
+        base = mod.split("@")[0]
+        mod_name = mod_name_map[base]
+        for output_name in mod_outputs.get(base, []):
+            safe_name = f"{mod_name}__{output_name}"
+            main_lines.append(f'output "{safe_name}" {{')
+            main_lines.append(f'  value = module.{mod_name}.{output_name}')
+            main_lines.append("}")
+            main_lines.append("")
+
     (tf_dir / "main.tf").write_text("\n".join(main_lines) + "\n")
 
     # --- variables.tf ---
