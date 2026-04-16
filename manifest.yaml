@@ -23,8 +23,8 @@ modules:
   # - agentcore-agents/agent2                            # planned
 
 params:
-  account_name: QuickSuiteStarterKit
-  notification_email: ""
-  admin_pro_group_name: ""
-  reader_pro_group_names: "[]"
-  region: us-east-1                  # or "env:AWS_REGION"
+  account_name: AmazonQuickStarterKit-Terraform
+  notification_email: "tomron@amazon.com"
+  admin_pro_group_name: Tom-Test-Site-2
+  reader_pro_group_names: '["QuickSuiteStarterKit-ReaderPro"]'
+  region: us-east-1
