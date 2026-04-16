@@ -3,10 +3,6 @@ variable "bucket_name_prefix" {
   default = "quicksuite-data"
 }
 
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
 resource "aws_s3_bucket" "data" {
   bucket_prefix = "${var.bucket_name_prefix}-"
   force_destroy = true
@@ -51,48 +47,10 @@ resource "aws_s3_bucket_policy" "data" {
   })
 }
 
-# @secure_recommendation: Least-privilege IAM role scoped to this bucket only for QuickSight S3 access
-resource "aws_iam_role" "quicksight_s3" {
-  name = "QuickSuiteS3DataAccess"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { Service = "quicksight.amazonaws.com" }
-      Action    = "sts:AssumeRole"
-      Condition = { StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current.account_id } }
-    }]
-  })
-}
-
-resource "aws_iam_role_policy" "quicksight_s3" {
-  name = "S3ReadAccess"
-  role = aws_iam_role.quicksight_s3.id
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect   = "Allow"
-        Action   = ["s3:GetObject", "s3:GetObjectVersion"]
-        Resource = "${aws_s3_bucket.data.arn}/*"
-      },
-      {
-        Effect   = "Allow"
-        Action   = ["s3:ListBucket"]
-        Resource = aws_s3_bucket.data.arn
-      }
-    ]
-  })
-}
-
 output "bucket_name" {
   value = aws_s3_bucket.data.id
 }
 
 output "bucket_arn" {
   value = aws_s3_bucket.data.arn
-}
-
-output "quicksight_role_arn" {
-  value = aws_iam_role.quicksight_s3.arn
 }
