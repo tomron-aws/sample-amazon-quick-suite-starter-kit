@@ -97,7 +97,7 @@ def try_infracost(manifest: dict) -> str | None:
     if not shutil.which("infracost"):
         return None
 
-    tf_dir = Path("templates/customer-project/tf-app")
+    tf_dir = Path("generated")
     if not tf_dir.exists():
         return None
 

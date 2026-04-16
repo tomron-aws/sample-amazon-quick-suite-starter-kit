@@ -221,7 +221,7 @@ def group_by_iac_type(manifest: dict) -> dict[str, list[str]]:
     return groups
 
 
-TF_OUTPUT_DIR = Path("templates/customer-project/tf-app")
+TF_OUTPUT_DIR = Path("generated")
 
 
 def generate_terraform(modules: list[str], manifest: dict) -> Path:
@@ -290,7 +290,7 @@ def generate_terraform(modules: list[str], manifest: dict) -> Path:
         mod_params = config.get("params", [])
         mod_deps = config.get("dependencies") or []
         main_lines.append(f'module "{mod_name}" {{')
-        main_lines.append(f'  source = "../../../{tf_path}"')
+        main_lines.append(f'  source = "../{tf_path}"')
         for p in mod_params:
             # Check if a dependency module exports this param as an output
             wired = False
@@ -419,7 +419,7 @@ STATUS_ERROR = "error"
 
 def check_status_terraform(mod: str, manifest: dict, target_env: dict | None = None) -> tuple[str, str]:
     """Check Terraform module drift via terraform plan. Returns (status, detail)."""
-    tf_dir = Path("templates/customer-project/tf-app")
+    tf_dir = Path("generated")
     if not tf_dir.exists():
         return STATUS_UNKNOWN, "Terraform directory not found — module may not have been deployed yet"
     print(f"  Running terraform plan...")

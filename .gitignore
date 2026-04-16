@@ -17,7 +17,7 @@ __pycache__/
 *.egg-info/
 
 # Generated
-templates/customer-project/tf-app/
+generated/
 .deploy-state.json
 logs/
 
