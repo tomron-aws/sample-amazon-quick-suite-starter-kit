@@ -11,4 +11,4 @@ Creates a QuickSight data source and SPICE dataset from a CSV file in S3.
 ## Prerequisites
 
 - CSV file must already exist in the S3 bucket
-- Bucket and IAM role from `governance/infrastructure` module
+- Bucket and IAM role from `aws-resources` module
