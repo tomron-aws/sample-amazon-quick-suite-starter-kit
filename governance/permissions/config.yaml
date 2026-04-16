@@ -1,13 +1,7 @@
 name: permissions
 version: 0.1.0
-status: preview
+status: ready
 iac_type: terraform
-dependencies: []
-params:
-  - name: identity_store_id
-    required: true
-    type: string
-    pattern: "^d-[a-zA-Z0-9]+$"
-artifacts:
-  - cfn-template.yaml
-  - terraform/main.tf
+dependencies:
+  - governance/subscription
+params: []

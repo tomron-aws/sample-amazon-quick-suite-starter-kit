@@ -10,6 +10,7 @@ project: my-quick-suite-deployment
 
 modules:
   - governance/subscription                              # ready
+  - governance/permissions                               # ready
   - governance/group-assignments                         # ready
   # - governance/permissions                             # preview
   # - governance/themes                                  # planned
