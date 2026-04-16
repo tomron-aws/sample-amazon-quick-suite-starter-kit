@@ -269,6 +269,17 @@ def generate_terraform(modules: list[str], manifest: dict) -> Path:
         base = mod.split("@")[0]
         mod_name_map[base] = base.replace("/", "_").replace("-", "_")
 
+    # Track params that are wired via module outputs (not user-facing)
+    wired_params: set[str] = set()
+    # Build a map of module outputs: module_path -> set of output names
+    mod_outputs: dict[str, set[str]] = {}
+    for mod in modules:
+        base = mod.split("@")[0]
+        tf_file = Path(base) / "terraform" / "main.tf"
+        if tf_file.exists():
+            import re as _re
+            mod_outputs[base] = set(_re.findall(r'output\s+"(\w+)"', tf_file.read_text()))
+
     for mod in modules:
         base = mod.split("@")[0]
         tf_path = Path(base) / "terraform"
@@ -281,7 +292,17 @@ def generate_terraform(modules: list[str], manifest: dict) -> Path:
         main_lines.append(f'module "{mod_name}" {{')
         main_lines.append(f'  source = "../../../{tf_path}"')
         for p in mod_params:
-            main_lines.append(f'  {p["name"]} = var.{p["name"]}')
+            # Check if a dependency module exports this param as an output
+            wired = False
+            for dep in mod_deps:
+                if dep in mod_outputs and p["name"] in mod_outputs[dep]:
+                    dep_mod_name = mod_name_map[dep]
+                    main_lines.append(f'  {p["name"]} = module.{dep_mod_name}.{p["name"]}')
+                    wired_params.add(p["name"])
+                    wired = True
+                    break
+            if not wired:
+                main_lines.append(f'  {p["name"]} = var.{p["name"]}')
         # Add depends_on for declared dependencies
         dep_refs = [f"module.{mod_name_map[d]}" for d in mod_deps if d in mod_name_map]
         if dep_refs:
@@ -302,6 +323,8 @@ def generate_terraform(modules: list[str], manifest: dict) -> Path:
             "",
         ]
     for name, p in all_params.items():
+        if name in wired_params:
+            continue
         tf_type = "string"
         if p.get("type") == "json":
             tf_type = "list(string)"
@@ -320,6 +343,8 @@ def generate_terraform(modules: list[str], manifest: dict) -> Path:
     # --- terraform.tfvars ---
     tfvars_lines = ["# Auto-generated from manifest.yaml — edit as needed.", ""]
     for name, p in all_params.items():
+        if name in wired_params:
+            continue
         value = params.get(name, "")
         if p.get("type") == "json":
             tfvars_lines.append(f'{name} = {value or "[]"}')
