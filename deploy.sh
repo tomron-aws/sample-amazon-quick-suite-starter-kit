@@ -1,20 +1,25 @@
 #!/bin/bash
-# Quick Suite Starter Kit — Single deploy entry point
-# Reads manifest.yaml and dispatches to the appropriate IaC engines.
+# Quick Suite Starter Kit — Deploy entry point
 #
 # Usage:
-#   ./deploy.sh                  # Interactive mode (default) — prompts for approval
-#   ./deploy.sh --auto-approve   # CI mode — skips approval prompts
-#   SKIP_BOOTSTRAP=1 ./deploy.sh # Skip bootstrap (if already run separately)
+#   ./deploy.sh                  # Generate + apply (prompts for approval)
+#   ./deploy.sh --auto-approve   # Generate + apply (CI mode, no prompts)
+#   ./deploy.sh generate         # Generate only — produces Terraform files
 set -euo pipefail
 
 echo "=== Quick Suite Starter Kit Deploy ==="
 
-# 1. Bootstrap (prerequisites, external accelerators, validation)
+# Bootstrap (prerequisites, external accelerators, validation)
 if [ "${SKIP_BOOTSTRAP:-0}" != "1" ]; then
   ./bootstrap.sh
   echo ""
 fi
 
-# 2. Deploy
+# If "generate" is passed, just generate and exit
+if [ "${1:-}" = "generate" ]; then
+  python3 core/utils/orchestrator.py generate
+  exit 0
+fi
+
+# Otherwise: generate + apply
 python3 core/utils/orchestrator.py deploy "$@"

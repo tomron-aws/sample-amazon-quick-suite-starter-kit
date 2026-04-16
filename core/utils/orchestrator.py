@@ -7,17 +7,13 @@ import os
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
 
 from param_resolver import resolve_params
-from deploy_targets import DeployTarget, resolve_target, validate_targets
-from deploy_log import DeployLogger
+from deploy_targets import resolve_target, validate_targets
 from cost_estimator import print_cost_report
-
-DEPLOY_STATE_FILE = ".deploy-state.json"
 
 # --- Param type validators ---
 # Each returns (is_valid, error_message).
@@ -225,33 +221,96 @@ def group_by_iac_type(manifest: dict) -> dict[str, list[str]]:
     return groups
 
 
-def deploy_terraform(modules: list[str], manifest: dict, auto_approve: bool = False, target_env: dict | None = None) -> None:
-    """Deploy Terraform modules."""
-    print(f"\n=== Deploying {len(modules)} Terraform module(s) ===")
-    tf_dir = Path("templates/customer-project/tf-app")
-    if not tf_dir.exists():
-        print("  Generating Terraform root config...")
-        tf_dir.mkdir(parents=True, exist_ok=True)
-        lines = ['# Auto-generated from manifest.yaml\n']
-        for mod in modules:
-            base = mod.split("@")[0]
-            tf_path = Path(base) / "terraform"
-            if tf_path.exists():
-                mod_name = base.replace("/", "_").replace("-", "_")
-                lines.append(f'module "{mod_name}" {{')
-                lines.append(f'  source = "../../../{tf_path}"')
-                for k, v in manifest.get("params", {}).items():
-                    lines.append(f'  {k} = "{v}"')
-                lines.append("}\n")
-        (tf_dir / "main.tf").write_text("\n".join(lines))
-    subprocess.run(["terraform", "init"], cwd=tf_dir, check=True, env=target_env)
-    if auto_approve:
-        subprocess.run(["terraform", "apply", "-auto-approve"], cwd=tf_dir, check=True, env=target_env)
-    else:
-        print("\n  Running terraform plan...")
-        subprocess.run(["terraform", "plan", "-out=tfplan"], cwd=tf_dir, check=True, env=target_env)
-        print("\n  Review the plan above. Applying...")
-        subprocess.run(["terraform", "apply", "tfplan"], cwd=tf_dir, check=True, env=target_env)
+TF_OUTPUT_DIR = Path("templates/customer-project/tf-app")
+
+
+def generate_terraform(modules: list[str], manifest: dict) -> Path:
+    """Generate a native Terraform root module from the manifest.
+
+    Produces:
+      - main.tf       — module blocks with var references
+      - variables.tf  — union of all module params as TF variables
+      - terraform.tfvars — param values from manifest
+    """
+    tf_dir = TF_OUTPUT_DIR
+    tf_dir.mkdir(parents=True, exist_ok=True)
+    params = manifest.get("params", {})
+
+    # Collect the union of all params across selected modules (preserving first-seen defaults)
+    all_params: dict[str, dict] = {}
+    for mod in modules:
+        config = load_module_config(mod)
+        for p in config.get("params", []):
+            if p["name"] not in all_params:
+                all_params[p["name"]] = p
+
+    # --- main.tf ---
+    main_lines = [
+        "# Auto-generated from manifest.yaml — do not edit manually.",
+        "# Re-generate with: python3 core/utils/orchestrator.py generate",
+        "",
+        "terraform {",
+        '  required_providers {',
+        '    aws = {',
+        '      source  = "hashicorp/aws"',
+        '      version = "~> 6.0"',
+        '    }',
+        '  }',
+        '}',
+        "",
+        "provider \"aws\" {",
+        "  region = var.region",
+        "}",
+        "",
+    ]
+    for mod in modules:
+        base = mod.split("@")[0]
+        tf_path = Path(base) / "terraform"
+        if not tf_path.exists():
+            continue
+        mod_name = base.replace("/", "_").replace("-", "_")
+        config = load_module_config(mod)
+        mod_params = config.get("params", [])
+        main_lines.append(f'module "{mod_name}" {{')
+        main_lines.append(f'  source = "../../../{tf_path}"')
+        for p in mod_params:
+            main_lines.append(f'  {p["name"]} = var.{p["name"]}')
+        main_lines.append("}")
+        main_lines.append("")
+    (tf_dir / "main.tf").write_text("\n".join(main_lines) + "\n")
+
+    # --- variables.tf ---
+    var_lines = ["# Auto-generated from manifest.yaml — do not edit manually.", ""]
+    # Always include region
+    if "region" not in all_params:
+        var_lines += [
+            'variable "region" {',
+            "  type    = string",
+            '  default = "us-east-1"',
+            "}",
+            "",
+        ]
+    for name, p in all_params.items():
+        var_lines.append(f'variable "{name}" {{')
+        var_lines.append(f"  type = string")
+        if p.get("default") is not None:
+            var_lines.append(f'  default = "{p["default"]}"')
+        var_lines.append("}")
+        var_lines.append("")
+    (tf_dir / "variables.tf").write_text("\n".join(var_lines) + "\n")
+
+    # --- terraform.tfvars ---
+    tfvars_lines = ["# Auto-generated from manifest.yaml — edit as needed.", ""]
+    for name in all_params:
+        value = params.get(name, "")
+        tfvars_lines.append(f'{name} = "{value}"')
+    # Always include region
+    if "region" not in all_params:
+        tfvars_lines.append(f'region = "{params.get("region", "us-east-1")}"')
+    tfvars_lines.append("")
+    (tf_dir / "terraform.tfvars").write_text("\n".join(tfvars_lines) + "\n")
+
+    return tf_dir
 
 
 def deploy_external(modules: list[str], manifest: dict, auto_approve: bool = False, target_env: dict | None = None) -> None:
@@ -302,12 +361,6 @@ def deploy_config(modules: list[str], manifest: dict, auto_approve: bool = False
         else:
             print(f"  WARNING: No deploy.py found for {mod}, skipping")
 
-
-DEPLOYERS = {
-    "terraform": deploy_terraform,
-    "external": deploy_external,
-    "config-only": deploy_config,
-}
 
 
 # --- Status / drift detection ---
@@ -372,121 +425,11 @@ STATUS_CHECKERS = {
 }
 
 
-def save_deploy_state(state: dict) -> None:
-    """Persist deploy state to disk for resume capability."""
-    state["updated_at"] = datetime.now(timezone.utc).isoformat()
-    Path(DEPLOY_STATE_FILE).write_text(json.dumps(state, indent=2))
-
-
-def load_deploy_state() -> dict | None:
-    """Load previous deploy state, if any."""
-    path = Path(DEPLOY_STATE_FILE)
-    if not path.exists():
-        return None
-    return json.loads(path.read_text())
-
-
-def clear_deploy_state() -> None:
-    """Remove the deploy state file after successful completion."""
-    path = Path(DEPLOY_STATE_FILE)
-    if path.exists():
-        path.unlink()
-
-
-def run_deploy(ordered: list[str], manifest: dict, auto_approve: bool, resume_after: str | None = None, logger: DeployLogger | None = None) -> None:
-    """Execute the deploy loop with error handling and state tracking."""
-    state = {
-        "ordered": ordered,
-        "deployed": [],
-        "failed": None,
-        "remaining": list(ordered),
-        "started_at": datetime.now(timezone.utc).isoformat(),
-    }
-
-    # If resuming, skip already-deployed modules
-    if resume_after:
-        try:
-            resume_idx = ordered.index(resume_after) + 1
-        except ValueError:
-            print(f"ERROR: Module '{resume_after}' not found in deploy order")
-            sys.exit(1)
-        state["deployed"] = ordered[:resume_idx]
-        state["remaining"] = ordered[resume_idx:]
-        print(f"\nResuming after '{resume_after}' — skipping {resume_idx} already-deployed module(s)")
-        if logger:
-            logger.log_event("resume", resume_after=resume_after, skipped=resume_idx)
-
-    save_deploy_state(state)
-
-    for mod in list(state["remaining"]):
-        config = load_module_config(mod)
-        iac_type = config.get("iac_type", "terraform")
-        deployer = DEPLOYERS.get(iac_type)
-        if not deployer:
-            print(f"ERROR: Unknown iac_type '{iac_type}' for module '{mod}'")
-            sys.exit(1)
-
-        # Resolve deployment target (account/region/profile)
-        target = resolve_target(mod, manifest)
-        target_env = target.apply_to_env(dict(os.environ))
-        if target.profile or target.account:
-            print(f"  Target: {target}")
-
-        if logger:
-            logger.log_module_start(mod, iac_type)
-
-        try:
-            deployer([mod], manifest, auto_approve, target_env=target_env)
-            state["deployed"].append(mod)
-            state["remaining"].remove(mod)
-            save_deploy_state(state)
-            if logger:
-                logger.log_module_success(mod)
-        except subprocess.CalledProcessError as e:
-            state["failed"] = mod
-            save_deploy_state(state)
-            if logger:
-                logger.log_module_failure(mod, e.returncode)
-                logger.finish("failed", deployed=state["deployed"], failed=mod)
-            print(f"\n{'=' * 60}")
-            print(f"DEPLOY FAILED at module: {mod}")
-            print(f"  iac_type: {iac_type}")
-            print(f"  exit code: {e.returncode}")
-            print(f"{'=' * 60}")
-            print(f"\nSuccessfully deployed ({len(state['deployed'])}):")
-            for d in state["deployed"]:
-                print(f"  ✓ {d}")
-            print(f"\nFailed:")
-            print(f"  ✗ {mod}")
-            if state["remaining"]:
-                print(f"\nNot attempted ({len(state['remaining'])}):")
-                for r in state["remaining"]:
-                    print(f"  - {r}")
-            print(f"\nRecovery options:")
-            print(f"  1. Fix the issue and resume:  python3 core/utils/orchestrator.py resume")
-            print(f"  2. Retry from scratch:        python3 core/utils/orchestrator.py deploy")
-            print(f"  3. Roll back deployed modules manually (see below)")
-            print(f"\nRollback commands for deployed modules:")
-            for d in reversed(state["deployed"]):
-                d_config = load_module_config(d)
-                d_type = d_config.get("iac_type", "terraform")
-                if d_type == "terraform":
-                    print(f"  cd templates/customer-project/tf-app && terraform destroy  # covers {d}")
-                else:
-                    print(f"  # {d} ({d_type}): manual rollback required")
-            print(f"\nDeploy state saved to {DEPLOY_STATE_FILE}")
-            sys.exit(1)
-
-    if logger:
-        logger.finish("success", deployed=state["deployed"])
-    clear_deploy_state()
-    print("\n✓ All modules deployed successfully")
-
 
 def main() -> None:
     """CLI entry point."""
     if len(sys.argv) < 2:
-        print("Usage: orchestrator.py <validate|deploy|resume|status|cost> [--auto-approve]")
+        print("Usage: orchestrator.py <validate|generate|deploy|status|cost> [--auto-approve]")
         sys.exit(1)
 
     command = sys.argv[1]
@@ -498,41 +441,52 @@ def main() -> None:
         validate(manifest)
         ordered = resolve_deploy_order(manifest)
         print(f"Deploy order: {' → '.join(ordered)}")
+    elif command == "generate":
+        validate(manifest)
+        ordered = resolve_deploy_order(manifest)
+        # Filter to terraform modules only
+        tf_modules = [m for m in ordered if load_module_config(m).get("iac_type", "terraform") == "terraform"]
+        if not tf_modules:
+            print("No Terraform modules selected in manifest.")
+            sys.exit(0)
+        tf_dir = generate_terraform(tf_modules, manifest)
+        print(f"\n✓ Generated Terraform root module in {tf_dir}/")
+        print(f"  - main.tf       ({len(tf_modules)} module(s))")
+        print(f"  - variables.tf")
+        print(f"  - terraform.tfvars")
+        print(f"\nNext steps:")
+        print(f"  cd {tf_dir}")
+        print(f"  terraform init")
+        print(f"  terraform plan")
+        print(f"  terraform apply")
     elif command == "deploy":
         validate(manifest)
-        if auto_approve:
-            print("⚠ Running with --auto-approve: skipping interactive approval")
         ordered = resolve_deploy_order(manifest)
-        print(f"\nDeploy order ({len(ordered)} module(s)):")
-        for i, mod in enumerate(ordered, 1):
-            config = load_module_config(mod)
-            print(f"  {i}. {mod} (iac_type={config.get('iac_type', 'terraform')})")
-        logger = DeployLogger("deploy", manifest)
-        logger.log_event("deploy_start", auto_approve=auto_approve, deploy_order=ordered)
-        run_deploy(ordered, manifest, auto_approve, logger=logger)
-    elif command == "resume":
-        state = load_deploy_state()
-        if not state:
-            print("No deploy state found — nothing to resume. Run 'deploy' instead.")
-            sys.exit(1)
-        failed = state.get("failed")
-        remaining = state.get("remaining", [])
-        if not remaining and not failed:
-            print("Previous deploy completed successfully — nothing to resume.")
-            clear_deploy_state()
-            sys.exit(0)
-        print(f"Resuming deploy from state file ({DEPLOY_STATE_FILE})")
-        print(f"  Previously deployed: {', '.join(state.get('deployed', [])) or '(none)'}")
-        print(f"  Failed: {failed or '(none)'}")
-        print(f"  Remaining: {', '.join(remaining) or '(none)'}")
-        # Re-resolve order but resume from the failed module
-        ordered = resolve_deploy_order(manifest)
-        resume_after = state["deployed"][-1] if state.get("deployed") else None
-        if auto_approve:
-            print("⚠ Running with --auto-approve: skipping interactive approval")
-        logger = DeployLogger("resume", manifest)
-        logger.log_event("resume_start", resume_after=resume_after)
-        run_deploy(ordered, manifest, auto_approve, resume_after=resume_after, logger=logger)
+
+        # Generate + apply Terraform modules
+        tf_modules = [m for m in ordered if load_module_config(m).get("iac_type", "terraform") == "terraform"]
+        if tf_modules:
+            tf_dir = generate_terraform(tf_modules, manifest)
+            print(f"\n=== Deploying {len(tf_modules)} Terraform module(s) ===")
+            target = resolve_target(tf_modules[0], manifest)
+            target_env = target.apply_to_env(dict(os.environ))
+            subprocess.run(["terraform", "init"], cwd=tf_dir, check=True, env=target_env)
+            if auto_approve:
+                subprocess.run(["terraform", "apply", "-auto-approve"], cwd=tf_dir, check=True, env=target_env)
+            else:
+                subprocess.run(["terraform", "apply"], cwd=tf_dir, check=True, env=target_env)
+
+        # Deploy external modules
+        ext_modules = [m for m in ordered if load_module_config(m).get("iac_type") == "external"]
+        if ext_modules:
+            deploy_external(ext_modules, manifest, auto_approve)
+
+        # Deploy config-only modules
+        cfg_modules = [m for m in ordered if load_module_config(m).get("iac_type") == "config-only"]
+        if cfg_modules:
+            deploy_config(cfg_modules, manifest, auto_approve)
+
+        print("\n✓ All modules deployed successfully")
     elif command == "status":
         validate(manifest)
         ordered = resolve_deploy_order(manifest)
@@ -556,7 +510,6 @@ def main() -> None:
             icon = {"no_drift": "✓", "drift": "⚠", "unknown": "?", "error": "✗"}[status]
             print(f"  {icon} {status}: {detail}\n")
 
-        # Summary
         print("=" * 50)
         print("Summary:")
         counts: dict[str, int] = {}
@@ -566,8 +519,6 @@ def main() -> None:
             if counts.get(s):
                 icon = {"no_drift": "✓", "drift": "⚠", "unknown": "?", "error": "✗"}[s]
                 print(f"  {icon} {s}: {counts[s]}")
-        if counts.get(STATUS_DRIFT, 0) > 0:
-            print(f"\nRun './deploy.sh' to reconcile drifted modules.")
     elif command == "cost":
         validate(manifest)
         ordered = resolve_deploy_order(manifest)
