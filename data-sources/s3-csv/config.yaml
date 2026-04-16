@@ -8,6 +8,9 @@ params:
   - name: bucket_name
     required: false
     type: string
+  - name: quicksight_role_arn
+    required: false
+    type: string
   - name: csv_key
     required: true
     type: string

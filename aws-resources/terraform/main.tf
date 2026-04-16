@@ -54,3 +54,43 @@ output "bucket_name" {
 output "bucket_arn" {
   value = aws_s3_bucket.data.arn
 }
+
+# @secure_recommendation: Least-privilege IAM role scoped to this bucket, used as RoleArn on S3 data sources to bypass manual console authorization
+resource "aws_iam_role" "quicksight_s3" {
+  name = "QuickSuiteS3DataAccess"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "quicksight.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+      Condition = { StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current.account_id } }
+    }]
+  })
+}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_role_policy" "quicksight_s3" {
+  name = "S3ReadAccess"
+  role = aws_iam_role.quicksight_s3.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["s3:GetObject", "s3:GetObjectVersion"]
+        Resource = "${aws_s3_bucket.data.arn}/*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["s3:ListBucket"]
+        Resource = aws_s3_bucket.data.arn
+      }
+    ]
+  })
+}
+
+output "quicksight_role_arn" {
+  value = aws_iam_role.quicksight_s3.arn
+}

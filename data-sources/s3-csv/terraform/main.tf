@@ -1,4 +1,5 @@
 variable "bucket_name" { type = string }
+variable "quicksight_role_arn" { type = string }
 variable "csv_key" { type = string }
 variable "dataset_name" {
   type    = string
@@ -34,6 +35,7 @@ resource "aws_quicksight_data_source" "s3" {
         bucket = var.bucket_name
         key    = aws_s3_object.manifest.key
       }
+      role_arn = var.quicksight_role_arn
     }
   }
 }
