@@ -2,8 +2,7 @@ name: infrastructure
 version: 0.1.0
 status: ready
 iac_type: terraform
-dependencies:
-  - governance/subscription
+dependencies: []
 params:
   - name: bucket_name_prefix
     required: false

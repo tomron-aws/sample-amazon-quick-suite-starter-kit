@@ -12,7 +12,7 @@ modules:
   - governance/subscription                              # ready
   - governance/permissions                               # ready
   - governance/group-assignments                         # ready
-  - governance/infrastructure                            # ready
+  - infrastructure                                       # ready
   - data-sources/s3-csv                                  # ready
   # - governance/permissions                             # preview
   # - governance/themes                                  # planned
