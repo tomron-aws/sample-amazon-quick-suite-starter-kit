@@ -14,7 +14,6 @@ modules:
   - governance/group-assignments                         # ready
   - aws-resources                                       # ready
   - data-sources/s3-csv                                  # ready
-  # - governance/permissions                             # preview
   # - governance/themes                                  # planned
   # - data-sources/redshift                              # preview
   # - data-sources/athena                                # preview
@@ -30,8 +29,6 @@ params:
   admin_pro_group_name: Tom-Test-Site-2
   reader_pro_group_names: '["QuickSuiteStarterKit-ReaderPro"]'
   bucket_name_prefix: quicksuite-data
-  bucket_name: ""                    # filled after governance/aws-resources deploy
-  quicksight_role_arn: ""            # filled after governance/aws-resources deploy
   csv_key: airline_revenue.csv
   dataset_name: airline-revenue
   region: us-east-1
