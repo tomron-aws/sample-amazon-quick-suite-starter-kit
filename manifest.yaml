@@ -12,6 +12,8 @@ modules:
   - governance/subscription                              # ready
   - governance/permissions                               # ready
   - governance/group-assignments                         # ready
+  - governance/infrastructure                            # ready
+  - data-sources/s3-csv                                  # ready
   # - governance/permissions                             # preview
   # - governance/themes                                  # planned
   # - data-sources/redshift                              # preview
@@ -27,4 +29,9 @@ params:
   notification_email: "tomron@amazon.com"
   admin_pro_group_name: Tom-Test-Site-2
   reader_pro_group_names: '["QuickSuiteStarterKit-ReaderPro"]'
+  bucket_name_prefix: quicksuite-data
+  bucket_name: ""                    # filled after governance/infrastructure deploy
+  quicksight_role_arn: ""            # filled after governance/infrastructure deploy
+  csv_key: airline_revenue.csv
+  dataset_name: airline-revenue
   region: us-east-1
