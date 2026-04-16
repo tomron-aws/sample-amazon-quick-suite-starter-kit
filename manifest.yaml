@@ -10,6 +10,7 @@ project: my-quick-suite-deployment
 
 modules:
   - governance/subscription                              # ready
+  - governance/group-assignments                         # ready
   # - governance/permissions                             # preview
   # - governance/themes                                  # planned
   # - data-sources/redshift                              # preview
@@ -21,9 +22,8 @@ modules:
   # - agentcore-agents/agent2                            # planned
 
 params:
-  identity_center_instance_arn: ""   # or "ssm:/quicksuite/identity_center_arn"
-  identity_store_id: ""              # or "ssm:/quicksuite/identity_store_id"
   account_name: QuickSuiteStarterKit
-  admin_user_email: ""               # or "secretsmanager:quicksuite/admin-email"
-  admin_pro_group: ""
+  notification_email: ""
+  admin_pro_group_name: ""
+  reader_pro_group_names: "[]"
   region: us-east-1                  # or "env:AWS_REGION"

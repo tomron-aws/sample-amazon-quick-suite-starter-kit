@@ -263,18 +263,29 @@ def generate_terraform(modules: list[str], manifest: dict) -> Path:
         "}",
         "",
     ]
+    # Build a map of module base path -> TF module name for depends_on
+    mod_name_map = {}
+    for mod in modules:
+        base = mod.split("@")[0]
+        mod_name_map[base] = base.replace("/", "_").replace("-", "_")
+
     for mod in modules:
         base = mod.split("@")[0]
         tf_path = Path(base) / "terraform"
         if not tf_path.exists():
             continue
-        mod_name = base.replace("/", "_").replace("-", "_")
+        mod_name = mod_name_map[base]
         config = load_module_config(mod)
         mod_params = config.get("params", [])
+        mod_deps = config.get("dependencies") or []
         main_lines.append(f'module "{mod_name}" {{')
         main_lines.append(f'  source = "../../../{tf_path}"')
         for p in mod_params:
             main_lines.append(f'  {p["name"]} = var.{p["name"]}')
+        # Add depends_on for declared dependencies
+        dep_refs = [f"module.{mod_name_map[d]}" for d in mod_deps if d in mod_name_map]
+        if dep_refs:
+            main_lines.append(f'  depends_on = [{", ".join(dep_refs)}]')
         main_lines.append("}")
         main_lines.append("")
     (tf_dir / "main.tf").write_text("\n".join(main_lines) + "\n")
@@ -291,19 +302,29 @@ def generate_terraform(modules: list[str], manifest: dict) -> Path:
             "",
         ]
     for name, p in all_params.items():
+        tf_type = "string"
+        if p.get("type") == "json":
+            tf_type = "list(string)"
         var_lines.append(f'variable "{name}" {{')
-        var_lines.append(f"  type = string")
+        var_lines.append(f"  type = {tf_type}")
         if p.get("default") is not None:
-            var_lines.append(f'  default = "{p["default"]}"')
+            default_val = p["default"]
+            if tf_type == "list(string)":
+                var_lines.append(f"  default = {default_val}")
+            else:
+                var_lines.append(f'  default = "{default_val}"')
         var_lines.append("}")
         var_lines.append("")
     (tf_dir / "variables.tf").write_text("\n".join(var_lines) + "\n")
 
     # --- terraform.tfvars ---
     tfvars_lines = ["# Auto-generated from manifest.yaml — edit as needed.", ""]
-    for name in all_params:
+    for name, p in all_params.items():
         value = params.get(name, "")
-        tfvars_lines.append(f'{name} = "{value}"')
+        if p.get("type") == "json":
+            tfvars_lines.append(f'{name} = {value or "[]"}')
+        else:
+            tfvars_lines.append(f'{name} = "{value}"')
     # Always include region
     if "region" not in all_params:
         tfvars_lines.append(f'region = "{params.get("region", "us-east-1")}"')
