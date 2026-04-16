@@ -1,84 +1,68 @@
 # Getting Started
 
-This guide walks you through deploying Amazon Quick Suite with [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/).
+This guide walks you through deploying Amazon Quick Suite with [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/) using Terraform.
 
 ## Prerequisites
 
 - [AWS CLI](https://docs.aws.amazon.com/cli/) configured with appropriate credentials
-- Node.js 18+ and npm
-- Python 3.12+
-- uv package manager
-- Docker (for Lambda bundling)
-- AWS CDK CLI: `npm install -g aws-cdk`
+- [Terraform](https://developer.hashicorp.com/terraform/install) 1.5+
+- Python 3.12+ with `pyyaml` installed (`pip install pyyaml`)
 
 !!! warning "Region Restrictions"
 
     Amazon Quick Suite AI capabilities are only available in certain AWS regions. Check the [Quick Suite FAQs](https://aws.amazon.com/quicksuite/faqs/) for current regional availability.
 
-## Step 1: Install Dependencies
+## Step 1: Configure Your Deployment
 
-```bash
-npm install
-```
-
-## Step 2: Configure Your Deployment
-
-Edit `manifest.yaml` to select modules and set parameters for your customer engagement:
+Edit `manifest.yaml` to select modules and set parameters:
 
 ```yaml
-project: acme-analytics-platform
+project: my-quick-suite-deployment
 
 modules:
   - governance/subscription
   - governance/permissions
-  # Uncomment modules as needed:
-  # - data-sources/redshift
-  # - data-sources/athena
+  - governance/group-assignments
 
 params:
-  identity_center_instance_arn: "arn:aws:sso:::instance/ssoins-xxxxx"
-  identity_store_id: "d-xxxxxxxxxx"
   account_name: MyCompanyQuickSuite
-  admin_user_email: quicksuite-admin@mycompany.com
-  admin_pro_group: QuickSuiteAdmins
+  notification_email: quicksuite-admin@mycompany.com
+  admin_pro_group_name: QuickSuiteAdmins
+  reader_pro_group_names: '["QuickSuiteReaders"]'
   region: us-east-1
 ```
 
 ### Configuration Options
-
-**identity_center_instance_arn** (required)
-Existing [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/) instance ARN.
-
-**identity_store_id** (required)
-Identity Store ID associated with your IAM Identity Center instance.
 
 **account_name** (default: `QuickSuiteStarterKit`)
 Display name for your Quick Suite account.
 
 !!! danger "Important"
 
-    - End users must type this name when signing in - choose wisely!
+    - End users must type this name when signing in — choose wisely!
     - **Cannot be changed** after account creation
     - Must be **globally unique** across all AWS accounts
 
-**admin_user_email** (required)
-Email address for Quick Suite admin notifications.
+**notification_email** (required)
+Email address for Quick Suite notifications.
 
-**admin_pro_group** (required)
-Name of the [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/) group for Quick Suite administrators.
+**admin_pro_group_name** (required)
+Name of the [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/) group for Quick Suite administrators. This group must already exist in your Identity Center identity store.
 
-### Using secrets references (recommended for CI/CD)
+**reader_pro_group_names** (optional, default: `[]`)
+List of Identity Center group names to assign the Reader Pro role. Example: `'["Analysts", "Viewers"]'`
+
+### Using secret references (recommended for CI/CD)
 
 Instead of putting sensitive values directly in `manifest.yaml`, you can reference them from external sources:
 
 ```yaml
 params:
-  # From SSM Parameter Store (recommended for shared config)
-  identity_center_instance_arn: "ssm:/quicksuite/identity_center_arn"
-  identity_store_id: "ssm:/quicksuite/identity_store_id"
+  # From SSM Parameter Store
+  notification_email: "ssm:/quicksuite/notification_email"
 
-  # From Secrets Manager (recommended for credentials/emails)
-  admin_user_email: "secretsmanager:quicksuite/admin-email"
+  # From Secrets Manager
+  admin_pro_group_name: "secretsmanager:quicksuite/admin-group"
 
   # From environment variables (useful in CI pipelines)
   region: "env:AWS_REGION"
@@ -87,8 +71,6 @@ params:
   account_name: MyCompanyQuickSuite
 ```
 
-Supported prefixes:
-
 | Prefix | Source | Use for |
 |---|---|---|
 | `ssm:/path` | SSM Parameter Store | ARNs, IDs, shared config |
@@ -96,76 +78,64 @@ Supported prefixes:
 | `env:VAR_NAME` | Environment variable | CI pipeline values |
 | (no prefix) | Plaintext in manifest | Non-sensitive defaults |
 
-The resolver runs automatically before validation. Resolved values are masked in output for security.
-
-## Step 3: Estimate costs (optional)
-
-Before deploying, review the estimated costs for your selected modules:
+## Step 2: Generate Terraform Project
 
 ```bash
-./cost.sh
+python3 core/utils/orchestrator.py generate
 ```
 
-This shows QuickSight per-user licensing costs and infrastructure costs per module. If you have `infracost` installed, it provides a detailed IaC cost breakdown.
+This reads your manifest, resolves dependencies, and generates a Terraform project in `templates/customer-project/tf-app/` with:
 
-## Step 4: Bootstrap AWS Account
+- `main.tf` — module blocks with dependency ordering
+- `variables.tf` — all parameters as Terraform variables
+- `terraform.tfvars` — values from your manifest
 
-If you haven't already bootstrapped your AWS account for CDK:
+You can also review the generated files before deploying:
 
 ```bash
-npx cdk bootstrap
+cat templates/customer-project/tf-app/main.tf
 ```
 
-## Step 4: Deploy Infrastructure
+## Step 3: Deploy
 
 ```bash
-./deploy.sh
+cd templates/customer-project/tf-app
+terraform init
+terraform plan
+terraform apply
 ```
 
-This runs the bootstrap (prerequisites check, manifest validation) and then deploys modules in dependency order. You'll be prompted to approve infrastructure changes.
-
-For CI pipelines or non-interactive environments:
+Or use the one-shot deploy script:
 
 ```bash
-./deploy.sh --auto-approve
+./deploy.sh                  # Interactive (prompts for approval)
+./deploy.sh --auto-approve   # CI mode (no prompts)
 ```
 
 This deployment will:
 
-1. Create or use your existing [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/) instance
-2. Deploy Quick Suite infrastructure using a custom resource Lambda
-3. Create the `QUICK_SUITE_ADMIN` group automatically (required for setup)
+1. Auto-discover your [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/) instance
+2. Create the Quick Suite subscription with IAM Identity Center authentication
+3. Assign your admin group to the Admin Pro role
+4. Assign reader groups to the Reader Pro role (if configured)
+5. Apply custom permission profiles (e.g. restrict sharing for Reader Pro)
 
 !!! warning "Do Not Access Quick Suite Yet"
 
-    After deployment completes, **do not** navigate to <https://us-east-1.quicksight.aws.amazon.com> yet. You must create an admin user first (Step 6), otherwise you won't be able to sign in.
+    After deployment completes, **do not** navigate to <https://us-east-1.quicksight.aws.amazon.com> yet. You must create an admin user first (Step 4), otherwise you won't be able to sign in.
 
-!!! note "Using Existing Admin Group"
-
-    If you have an existing admin group synced from your federated identity provider to [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/), you can modify the CDK code to use that group name instead of `QUICK_SUITE_ADMIN`.
-
-## Step 5: Enable Email OTP for API-Created Users
+## Step 4: Enable Email OTP for API-Created Users
 
 !!! danger "CRITICAL: Required Before Creating Users"
 
     This is a **one-time manual step** that you must complete before creating users via the operator tools. Without this setting, users created via API will not receive the invite to sign in.
 
-**Steps:**
-
 1. Open the [IAM Identity Center console](https://console.aws.amazon.com/singlesignon)
-2. Choose **Settings**
-3. Choose the **Authentication** tab
-4. In the **Standard authentication** section, choose **Configure**
-5. Check the **Send email OTP** checkbox
-6. Choose **Save**
+2. Choose **Settings** → **Authentication** tab
+3. In **Standard authentication**, choose **Configure**
+4. Check **Send email OTP** and save
 
-This setting allows users created via API to receive a verification email on their first sign-in attempt, enabling them to set their password. Learn more in the [AWS IAM Identity Center documentation](https://docs.aws.amazon.com/singlesignon/).
-
-## Step 6: Create Your First Admin User
-
-!!! danger "CRITICAL: Do This Before Accessing Quick Suite"
-
-    You **must** create an admin user before attempting to access Quick Suite. Without a user in the `QUICK_SUITE_ADMIN` group, you cannot sign in.
+## Step 5: Create Your First Admin User
 
 Navigate to the operator tools directory:
 
@@ -173,7 +143,7 @@ Navigate to the operator tools directory:
 cd core/utils
 ```
 
-### Create Your First Admin User
+Create an admin user:
 
 ```bash
 uv run manage-users create-user \
@@ -184,54 +154,35 @@ uv run manage-users create-user \
   --group QUICK_SUITE_ADMIN
 ```
 
-### Complete User Email Verification
+The user will receive an email to verify their address and set up MFA.
 
-After you create a user, they must verify their email and set up authentication in [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/):
+## Step 6: Access Quick Suite
 
-1. **Email Verification**: The user will receive an email with subject "Your administrator has requested you to verify your email address". They should follow the instructions in the email.
-
-2. **First Sign-In to IAM Identity Center**: The user enters their username and sets up MFA.
-
-3. **Set Password**: The user creates their password.
-
-!!! tip "Password Requirements"
-
-    Passwords must be at least 8 characters and contain uppercase, lowercase, numbers, and special characters.
-
-## Step 7: Access Quick Suite
-
-Now you can access Quick Suite:
-
-1. Navigate to <https://us-east-1.quicksight.aws.amazon.com> (replace `us-east-1` with your deployed region if different)
-2. Enter your Quick Suite account name (e.g., `QuickSuiteStarterKit`)
-3. You'll be redirected to [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/) login
-4. Sign in with your admin user credentials
+1. Navigate to <https://us-east-1.quicksight.aws.amazon.com> (replace region if different)
+2. Enter your Quick Suite account name
+3. Sign in with your admin user credentials via IAM Identity Center
 
 !!! success "You're Ready!"
 
     Your Quick Suite environment is now fully configured and ready to use!
 
-## Step 8: Verify Deployment
-
-Check your deployment:
+## Step 7: Verify Deployment
 
 ```bash
+cd core/utils
 uv run monitor account-summary
+```
+
+## Estimate Costs (Optional)
+
+Review estimated costs for your selected modules:
+
+```bash
+./cost.sh
 ```
 
 ## Next Steps
 
-### Adding More Users
-
-To add users with different roles (Author Pro or Reader Pro):
-
-1. Create the additional groups: `uv run manage-users setup-groups`
-2. Map groups to Quick Suite roles: `uv run manage-users assign-groups-to-quick-suite`
-3. Create users with appropriate groups
-
-See the [User Management Runbook](operator-tools/user-management-runbook.md) for detailed instructions.
-
-### Other Resources
-
-- [Monitoring Runbook](operator-tools/monitoring-runbook.md) - Track usage
-- [Architecture Details](https://builder.aws.com/content/33FWxLBkVVy9zWYOppQKWcj7UTz/accelerate-your-amazon-quick-suite-implementation-starter-kit-for-rapid-deployment) - Blog post
+- [Operator Tools](operator-tools/index.md) — manage users and monitor usage
+- [Module Development Guide](module-development-guide.md) — create new modules
+- [Cleanup Instructions](cleanup.md) — remove resources when done
