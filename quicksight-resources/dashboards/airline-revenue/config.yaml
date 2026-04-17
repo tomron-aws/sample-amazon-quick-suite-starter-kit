@@ -1,0 +1,16 @@
+name: airline-revenue-dashboard
+version: 0.1.0
+status: ready
+iac_type: terraform
+dependencies:
+  - quicksight-resources/data-sets/airline-revenue
+params:
+  - name: data_set_arn
+    required: false
+    type: string
+  - name: admin_pro_group_name
+    required: true
+    type: string
+  - name: dashboard_id
+    required: false
+    default: airline-revenue-dashboard
