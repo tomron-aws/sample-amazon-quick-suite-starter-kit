@@ -121,7 +121,7 @@ uv run monitor account-summary
 
 ## Documentation
 
-- [Full Documentation](https://aws-samples.github.io/sample-amazon-quick-suite-starter-kit/)
+- [Full Documentation](https://tomron-aws.github.io/sample-amazon-quick-suite-starter-kit/)
 - [Refactor Plan](docs/REFACTOR_PLAN.md) — architecture decisions and module contract
 
 ## Contributing
