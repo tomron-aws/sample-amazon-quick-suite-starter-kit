@@ -12,13 +12,13 @@ modules:
   - governance/subscription                              # ready
   - governance/permissions                               # ready
   - governance/group-assignments                         # ready
-  - aws-resources                                       # ready
-  - data-sources/s3-csv                                  # ready
-  - data-sources/topic                                   # ready
+  - aws-resources                                        # ready
+  - quicksight-resources/data-sources/s3-csv             # ready
+  - quicksight-resources/data-sets/airline-revenue       # ready
+  # - quicksight-resources/topics/                       # planned
+  # - quicksight-resources/analyses/                     # planned
+  # - quicksight-resources/dashboards/                   # planned
   # - governance/themes                                  # planned
-  # - data-sources/redshift                              # preview
-  # - data-sources/athena                                # preview
-  # - data-sources/glue                                  # preview
   # - use-case-accelerators/idp-accelerator@v1.0.0      # preview
   # - use-case-accelerators/live-meeting-assistant@v1.0.0  # planned
   # - agentcore-agents/agent1                            # planned
@@ -32,7 +32,5 @@ params:
   bucket_name_prefix: quicksuite-data
   csv_key: airline_revenue.csv
   dataset_name: airline-revenue
-  topic_id: airline-revenue-topic
-  topic_name: Airline Revenue Analysis
-  topic_description: "Analyze SkyLine Airways route revenue by fare class, booking channel, and time period"
+  data_source_name: s3-csv
   region: us-east-1

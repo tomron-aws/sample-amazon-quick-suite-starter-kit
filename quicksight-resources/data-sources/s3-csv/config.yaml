@@ -17,6 +17,6 @@ params:
   - name: admin_pro_group_name
     required: true
     type: string
-  - name: dataset_name
+  - name: data_source_name
     required: false
-    default: airline-revenue
+    default: s3-csv
