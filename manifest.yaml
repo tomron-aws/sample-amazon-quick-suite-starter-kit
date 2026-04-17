@@ -15,6 +15,7 @@ modules:
   - aws-resources                                        # ready
   - quicksight-resources/data-sources/s3-csv             # ready
   - quicksight-resources/data-sets/airline-revenue       # ready
+  - quicksight-resources/topics/airline-revenue          # ready
   # - quicksight-resources/topics/                       # planned
   # - quicksight-resources/analyses/                     # planned
   # - quicksight-resources/dashboards/                   # planned
