@@ -8,6 +8,9 @@ params:
   - name: data_set_arn
     required: false
     type: string
+  - name: admin_pro_group_name
+    required: true
+    type: string
   - name: topic_id
     required: false
     default: airline-revenue-topic

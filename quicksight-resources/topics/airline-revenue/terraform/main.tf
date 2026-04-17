@@ -1,4 +1,5 @@
 variable "data_set_arn" { type = string }
+variable "admin_pro_group_name" { type = string }
 variable "topic_id" {
   type    = string
   default = "airline-revenue-topic"
@@ -15,10 +16,14 @@ variable "topic_description" {
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
+locals {
+  admin_group_arn = "arn:aws:quicksight:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:group/default/${var.admin_pro_group_name}"
+}
+
 resource "terraform_data" "topic" {
   input = {
     account_id = data.aws_caller_identity.current.account_id
-    region     = data.aws_region.current.name
+    region     = data.aws_region.current.id
     topic_id   = var.topic_id
   }
 
@@ -52,7 +57,12 @@ resource "terraform_data" "topic" {
           }],
           "UserExperienceVersion": "NEW_READER_EXPERIENCE"
         }' \
-        --region ${data.aws_region.current.name}
+        --region ${data.aws_region.current.id} && \
+      aws quicksight update-topic-permissions \
+        --aws-account-id ${data.aws_caller_identity.current.account_id} \
+        --topic-id ${var.topic_id} \
+        --grant-permissions '[{"Principal": "${local.admin_group_arn}", "Actions": ["quicksight:DescribeTopic", "quicksight:ListTopicRefreshSchedules", "quicksight:DescribeTopicRefresh", "quicksight:DescribeTopicRefreshSchedule", "quicksight:ListTopicReviewedAnswers", "quicksight:CreateTopicRefreshSchedule", "quicksight:DeleteTopic", "quicksight:UpdateTopicRefreshSchedule", "quicksight:DeleteTopicRefreshSchedule", "quicksight:UpdateTopic", "quicksight:UpdateTopicPermissions", "quicksight:PassTopic"]}]' \
+        --region ${data.aws_region.current.id}
     EOT
   }
 
