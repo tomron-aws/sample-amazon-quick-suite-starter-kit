@@ -1,12 +1,17 @@
 variable "bucket_name" { type = string }
 variable "quicksight_role_arn" { type = string }
 variable "csv_key" { type = string }
+variable "admin_pro_group_name" { type = string }
 variable "dataset_name" {
   type    = string
   default = "airline-revenue"
 }
 
 data "aws_caller_identity" "current" {}
+
+locals {
+  admin_group_arn = "arn:aws:quicksight:us-east-1:${data.aws_caller_identity.current.account_id}:group/default/${var.admin_pro_group_name}"
+}
 
 # QuickSight needs a manifest.json that points to the CSV
 resource "aws_s3_object" "manifest" {
@@ -38,12 +43,40 @@ resource "aws_quicksight_data_source" "s3" {
       role_arn = var.quicksight_role_arn
     }
   }
+
+  permission {
+    actions   = [
+      "quicksight:DescribeDataSource",
+      "quicksight:DescribeDataSourcePermissions",
+      "quicksight:PassDataSource",
+      "quicksight:UpdateDataSource",
+      "quicksight:DeleteDataSource",
+      "quicksight:UpdateDataSourcePermissions",
+    ]
+    principal = local.admin_group_arn
+  }
 }
 
 resource "aws_quicksight_data_set" "this" {
   data_set_id = var.dataset_name
   name        = var.dataset_name
   import_mode = "SPICE"
+
+  permissions {
+    actions = [
+      "quicksight:DescribeDataSet",
+      "quicksight:DescribeDataSetPermissions",
+      "quicksight:PassDataSet",
+      "quicksight:DescribeIngestion",
+      "quicksight:ListIngestions",
+      "quicksight:UpdateDataSet",
+      "quicksight:DeleteDataSet",
+      "quicksight:CreateIngestion",
+      "quicksight:CancelIngestion",
+      "quicksight:UpdateDataSetPermissions",
+    ]
+    principal = local.admin_group_arn
+  }
 
   physical_table_map {
     physical_table_map_id = "s3-source"

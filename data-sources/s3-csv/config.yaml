@@ -14,6 +14,9 @@ params:
   - name: csv_key
     required: true
     type: string
+  - name: admin_pro_group_name
+    required: true
+    type: string
   - name: dataset_name
     required: false
     default: airline-revenue
