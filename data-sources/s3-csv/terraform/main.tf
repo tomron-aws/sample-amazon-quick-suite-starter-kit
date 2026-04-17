@@ -71,19 +71,19 @@ resource "aws_quicksight_data_set" "this" {
       }
       input_columns {
         name = "passengers"
-        type = "INTEGER"
+        type = "STRING"
       }
       input_columns {
         name = "avg_fare"
-        type = "DECIMAL"
+        type = "STRING"
       }
       input_columns {
         name = "revenue"
-        type = "DECIMAL"
+        type = "STRING"
       }
       input_columns {
         name = "load_factor"
-        type = "DECIMAL"
+        type = "STRING"
       }
       upload_settings {
         format           = "CSV"
@@ -102,9 +102,33 @@ resource "aws_quicksight_data_set" "this" {
     }
     data_transforms {
       cast_column_type_operation {
-        column_name    = "flight_date"
+        column_name     = "flight_date"
         new_column_type = "DATETIME"
-        format         = "yyyy-MM-dd"
+        format          = "yyyy-MM-dd"
+      }
+    }
+    data_transforms {
+      cast_column_type_operation {
+        column_name     = "passengers"
+        new_column_type = "INTEGER"
+      }
+    }
+    data_transforms {
+      cast_column_type_operation {
+        column_name     = "avg_fare"
+        new_column_type = "DECIMAL"
+      }
+    }
+    data_transforms {
+      cast_column_type_operation {
+        column_name     = "revenue"
+        new_column_type = "DECIMAL"
+      }
+    }
+    data_transforms {
+      cast_column_type_operation {
+        column_name     = "load_factor"
+        new_column_type = "DECIMAL"
       }
     }
   }
