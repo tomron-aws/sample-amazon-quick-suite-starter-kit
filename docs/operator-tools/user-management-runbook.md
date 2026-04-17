@@ -12,8 +12,8 @@ The `manage-users` tool manages AWS IAM Identity Center users and groups, and as
 
 ## Prerequisites
 
-- Quick Suite deployed via CDK
-- Access to AWS account with [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/) permissions
+- Quick Suite deployed via Terraform
+- Access to AWS account with IAM Identity Center permissions
 
 ## Tools
 

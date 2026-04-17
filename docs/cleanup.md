@@ -1,75 +1,79 @@
 # Cleanup and Deletion
 
-This guide explains how to properly remove your Amazon Quick Suite deployment to avoid ongoing costs and orphaned resources.
+How to remove your Quick Suite deployment.
 
-## Why manual cleanup is required
+!!! warning "Data Loss"
 
-The CloudFormation custom resource handler intentionally does **not** delete the QuickSight subscription during stack deletion. QuickSight subscriptions contain dashboards, datasets, analyses, and user configurations that cannot be recovered once deleted. This is a safety measure to prevent accidental data loss.
+    Destroying the QuickSight subscription deletes all dashboards, datasets, analyses, topics, and user configurations. This cannot be undone.
 
-When you run `cdk destroy`, the Lambda handler will log a warning with the exact cleanup steps. You can find these in CloudWatch Logs under the `/aws/lambda/QuickSuiteStarterKitQuickSuiteSetupFunction` log group.
+## Cleanup Steps
 
-## Cleanup steps
+### 1. Destroy Terraform Resources
 
-### 1. Delete the QuickSight subscription
-
-This must be done **before** destroying the CDK stack (the stack's IAM roles are needed for the API call).
+From the `generated/` directory:
 
 ```bash
-# Get your account ID
-ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+cd generated
+terraform destroy
+```
 
-# Delete the subscription
+This removes all Terraform-managed resources in reverse dependency order:
+
+- QuickSight dashboards, topics, datasets, data sources
+- S3 bucket and IAM roles
+- Custom permissions and role assignments
+- QuickSight account subscription
+
+!!! note "Topic Cleanup"
+
+    Topics created via the AWS CLI provisioner are automatically deleted by the destroy provisioner.
+
+### 2. Delete the QuickSight Subscription (if not managed by Terraform)
+
+If the subscription was created outside of Terraform or the destroy didn't remove it:
+
+```bash
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 aws quicksight delete-account-subscription --aws-account-id "$ACCOUNT_ID"
 ```
 
-Alternatively, use the [QuickSight console](https://console.aws.amazon.com/quicksight/) to unsubscribe.
+### 3. Remove IAM Identity Center Groups (optional)
 
-### 2. Destroy the CDK stack
-
-```bash
-npx cdk destroy --all
-```
-
-This removes the Lambda function, IAM roles, custom resource provider, and other infrastructure.
-
-### 3. Remove IAM Identity Center groups (optional)
-
-Groups created during setup are not automatically deleted. Remove them if no longer needed:
+Groups created during setup are not managed by Terraform. Remove them if no longer needed:
 
 ```bash
-# List groups to find IDs
-aws identitystore list-groups --identity-store-id <your-identity-store-id>
+IDENTITY_STORE_ID="<your-identity-store-id>"
+
+# List groups
+aws identitystore list-groups --identity-store-id "$IDENTITY_STORE_ID"
 
 # Delete each group
 aws identitystore delete-group \
-  --identity-store-id <your-identity-store-id> \
+  --identity-store-id "$IDENTITY_STORE_ID" \
   --group-id <group-id>
 ```
 
-### 4. Clean up CloudWatch log groups (optional)
+### 4. Clean Up Local Files
 
 ```bash
-aws logs delete-log-group \
-  --log-group-name /aws/lambda/QuickSuiteStarterKitQuickSuiteSetupFunction
+rm -rf generated/
 ```
 
-## Verifying cleanup
-
-After completing all steps, verify no resources remain:
+## Verifying Cleanup
 
 ```bash
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
 # Confirm subscription is gone
 aws quicksight describe-account-subscription \
   --aws-account-id "$ACCOUNT_ID" 2>&1 | grep -q "ResourceNotFoundException" && \
   echo "✓ Subscription deleted" || echo "⚠ Subscription still active"
 
-# Confirm stack is gone
-aws cloudformation describe-stacks \
-  --stack-name "my-quick-suite-deployment-stack" 2>&1 | grep -q "does not exist" && \
-  echo "✓ Stack deleted" || echo "⚠ Stack still exists"
+# Confirm S3 bucket is gone
+aws s3 ls | grep quicksuite-data && \
+  echo "⚠ Bucket still exists" || echo "✓ Bucket deleted"
 ```
 
-## See also
+## See Also
 
 - [Monitoring Runbook](operator-tools/monitoring-runbook.md) — check account status before cleanup
-- [User Management Runbook](operator-tools/user-management-runbook.md) — manage users before deletion

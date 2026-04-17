@@ -15,18 +15,14 @@ The `monitor` tool provides visibility into Quick Suite users, groups, and accou
 
 ### Deployment status and drift detection
 
-Check all deployed modules for configuration drift:
+Check deployed modules for configuration drift:
 
 ```bash
-./status.sh
+cd generated
+terraform plan
 ```
 
-This runs the appropriate check per module type:
-
-- CDK modules: `cdk diff` (shows what would change)
-- Terraform modules: `terraform plan -detailed-exitcode` (shows drift from state)
-- External modules: calls `status.sh` if provided by the accelerator
-- Config-only modules: calls `status.py` if provided
+A plan with 0 changes means no drift. Any planned changes indicate drift from the deployed state.
 
 ### account-summary
 
