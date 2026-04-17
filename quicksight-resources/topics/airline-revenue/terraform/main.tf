@@ -61,7 +61,7 @@ resource "terraform_data" "topic" {
       aws quicksight update-topic-permissions \
         --aws-account-id ${data.aws_caller_identity.current.account_id} \
         --topic-id ${var.topic_id} \
-        --grant-permissions '[{"Principal": "${local.admin_group_arn}", "Actions": ["quicksight:DescribeTopic", "quicksight:DescribeTopicPermissions", "quicksight:ListTopicRefreshSchedules", "quicksight:DescribeTopicRefresh", "quicksight:DescribeTopicRefreshSchedule", "quicksight:ListTopicReviewedAnswers", "quicksight:CreateTopicRefreshSchedule", "quicksight:DeleteTopic", "quicksight:UpdateTopicRefreshSchedule", "quicksight:DeleteTopicRefreshSchedule", "quicksight:UpdateTopic", "quicksight:UpdateTopicPermissions", "quicksight:SearchTopics", "quicksight:BatchCreateTopicReviewedAnswer", "quicksight:BatchDeleteTopicReviewedAnswer"]}]' \
+        --grant-permissions '[{"Principal": "${local.admin_group_arn}", "Actions": ["quicksight:DescribeTopic", "quicksight:DescribeTopicRefresh", "quicksight:ListTopicRefreshSchedules", "quicksight:DescribeTopicRefreshSchedule", "quicksight:DeleteTopic", "quicksight:UpdateTopic", "quicksight:CreateTopicRefreshSchedule", "quicksight:DeleteTopicRefreshSchedule", "quicksight:UpdateTopicRefreshSchedule", "quicksight:DescribeTopicPermissions", "quicksight:UpdateTopicPermissions"]}]' \
         --region ${data.aws_region.current.id}
     EOT
   }
