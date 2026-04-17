@@ -358,6 +358,8 @@ def generate_terraform(modules: list[str], manifest: dict) -> Path:
         if name in wired_params:
             continue
         value = params.get(name, "")
+        if not value and p.get("default") is not None:
+            continue
         if p.get("type") == "json":
             tfvars_lines.append(f'{name} = {value or "[]"}')
         else:

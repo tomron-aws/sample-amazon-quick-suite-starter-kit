@@ -4,7 +4,7 @@ variable "csv_key" { type = string }
 variable "admin_pro_group_name" { type = string }
 variable "data_source_name" {
   type    = string
-  default = "s3-csv"
+  default = "airline-revenue"
 }
 
 data "aws_caller_identity" "current" {}

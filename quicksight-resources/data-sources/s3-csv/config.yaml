@@ -19,4 +19,4 @@ params:
     type: string
   - name: data_source_name
     required: false
-    default: s3-csv
+    default: airline-revenue

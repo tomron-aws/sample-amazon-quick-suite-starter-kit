@@ -32,5 +32,4 @@ params:
   bucket_name_prefix: quicksuite-data
   csv_key: airline_revenue.csv
   dataset_name: airline-revenue
-  data_source_name: s3-csv
   region: us-east-1
