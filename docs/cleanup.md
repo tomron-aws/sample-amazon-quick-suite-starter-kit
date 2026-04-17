@@ -76,4 +76,4 @@ aws s3 ls | grep quicksuite-data && \
 
 ## See Also
 
-- [Monitoring Runbook](operator-tools/monitoring-runbook.md) — check account status before cleanup
+- [Getting Started](getting-started.md) — deployment guide

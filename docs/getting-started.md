@@ -137,24 +137,12 @@ This deployment will:
 
 ## Step 5: Create Your First Admin User
 
-Navigate to the operator tools directory:
+Create an admin user in the [IAM Identity Center console](https://console.aws.amazon.com/singlesignon):
 
-```bash
-cd core/utils
-```
-
-Create an admin user:
-
-```bash
-uv run manage-users create-user \
-  --username admin \
-  --email admin@example.com \
-  --given-name Admin \
-  --family-name User \
-  --group QUICK_SUITE_ADMIN
-```
-
-The user will receive an email to verify their address and set up MFA.
+1. Navigate to **Users** → **Add user**
+2. Fill in username, email, first/last name
+3. Add the user to your admin group (the one you specified as `admin_pro_group_name`)
+4. The user will receive an email to verify and set up MFA
 
 ## Step 6: Access Quick Suite
 
@@ -168,9 +156,11 @@ The user will receive an email to verify their address and set up MFA.
 
 ## Step 7: Verify Deployment
 
+Verify your resources in the [QuickSight console](https://us-east-1.quicksight.aws.amazon.com) or run:
+
 ```bash
-cd core/utils
-uv run monitor account-summary
+cd generated
+terraform output
 ```
 
 ## Estimate Costs (Optional)
@@ -183,6 +173,5 @@ Review estimated costs for your selected modules:
 
 ## Next Steps
 
-- [Operator Tools](operator-tools/index.md) — manage users and monitor usage
 - [Module Development Guide](module-development-guide.md) — create new modules
 - [Cleanup Instructions](cleanup.md) — remove resources when done

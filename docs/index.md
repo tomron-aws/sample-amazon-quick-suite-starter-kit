@@ -45,8 +45,7 @@ Each module lives in its own directory with a `config.yaml` declaring its parame
 ## Quick Start
 
 1. **[Getting Started](getting-started.md)** — deploy Quick Suite in ~15 minutes
-2. **[Operator Tools](operator-tools/index.md)** — manage users and monitor usage
-3. **[Cleanup](cleanup.md)** — remove resources when done
+2. **[Cleanup](cleanup.md)** — remove resources when done
 
 ## Available Modules
 
@@ -74,7 +73,6 @@ For role capabilities and pricing, see [Amazon Quick Suite Pricing](https://aws.
 ## Documentation
 
 - [Getting Started](getting-started.md) — deployment guide
-- [Operator Tools](operator-tools/index.md) — management runbooks
 - [Cleanup Instructions](cleanup.md) — remove resources
 - [Module Development Guide](module-development-guide.md) — creating new modules
 - [Accelerator Integration Guide](accelerator-integration-guide.md) — adding external accelerators
