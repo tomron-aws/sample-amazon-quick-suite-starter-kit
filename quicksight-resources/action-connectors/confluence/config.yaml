@@ -1,0 +1,15 @@
+name: confluence-action-connector
+version: 1.0.0
+iac_type: terraform
+dependencies:
+  - governance/subscription
+params:
+  - name: confluence_url
+    required: true
+    description: "Base URL of the Confluence instance (e.g., https://yoursite.atlassian.net/wiki)"
+  - name: secret_arn
+    required: true
+    description: "ARN of the AWS Secrets Manager secret containing Confluence API token or OAuth credentials"
+  - name: admin_pro_group
+    required: true
+    description: "IAM Identity Center group name granted admin access to this connector"
