@@ -5,6 +5,7 @@ project: my-quick-suite-deployment
 
 modules:
   - governance/subscription
+  - quicksight-resources/action-connectors/confluence
   # - governance/permissions
   # - governance/themes
   # - data-sources/redshift
@@ -16,9 +17,11 @@ modules:
   # - agentcore-agents/agent2
 
 params:
-  identity_center_instance_arn: ""
-  identity_store_id: ""
+  identity_center_instance_arn: "arn:aws:sso:::instance/ssoins-EXAMPLE"
+  identity_store_id: "d-EXAMPLE"
   account_name: QuickSuiteStarterKit
-  admin_user_email: ""
-  admin_pro_group: ""
+  admin_user_email: "admin@example.com"
+  admin_pro_group: "QuickAdminsPro"
   region: us-east-1
+  confluence_url: "https://yoursite.atlassian.net/wiki"
+  secret_arn: "arn:aws:secretsmanager:us-east-1:123456789012:secret:confluence-creds-EXAMPLE"
