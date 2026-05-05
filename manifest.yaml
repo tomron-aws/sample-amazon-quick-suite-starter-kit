@@ -6,6 +6,8 @@ project: my-quick-suite-deployment
 modules:
   - governance/subscription
   - quicksight-resources/action-connectors/asana
+  - quicksight-resources/action-connectors/confluence
+  - quicksight-resources/action-connectors/bedrock-knowledge-base
   # - governance/permissions
   # - governance/themes
   # - data-sources/redshift
@@ -25,3 +27,7 @@ params:
   region: us-east-1
   secret_arn: "arn:aws:secretsmanager:us-east-1:123456789012:secret:asana-pat-EXAMPLE"
   workspace_id: ""
+  confluence_url: "https://yoursite.atlassian.net/wiki"
+  secret_arn: "arn:aws:secretsmanager:us-east-1:123456789012:secret:confluence-creds-EXAMPLE"
+  knowledge_base_id: "ABCDEF1234"
+  quicksight_role_arn: "arn:aws:iam::123456789012:role/QuickSightServiceRole"
