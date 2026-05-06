@@ -1,0 +1,15 @@
+name: bedrock-knowledge-base-action-connector
+version: 1.0.0
+iac_type: terraform
+dependencies:
+  - governance/subscription
+params:
+  - name: knowledge_base_id
+    required: true
+    description: "ID of the existing Amazon Bedrock Knowledge Base to connect"
+  - name: quicksight_role_arn
+    required: true
+    description: "ARN of the IAM role that QuickSight assumes to invoke Bedrock Knowledge Base APIs"
+  - name: admin_pro_group
+    required: true
+    description: "IAM Identity Center group name granted admin access to this connector"
