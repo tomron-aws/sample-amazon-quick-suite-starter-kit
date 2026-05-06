@@ -1,8 +1,26 @@
 *.js
-!jest.config.js
 *.d.ts
 node_modules
 
-# CDK asset staging directory
-.cdk.staging
-cdk.out
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Generated
+generated/
+.deploy-state.json
+logs/
+
+# OS
+.DS_Store
+hackathon-*.json

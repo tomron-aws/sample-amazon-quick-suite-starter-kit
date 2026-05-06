@@ -1,8 +1,8 @@
 site_name: Amazon Quick Suite Starter Kit
 site_description: Starter kit for deploying Amazon Quick Suite with IAM Identity Center
 site_author: AWS
-repo_url: https://github.com/aws-samples/sample-amazon-quick-suite-starter-kit
-repo_name: aws-samples/sample-amazon-quick-suite-starter-kit
+repo_url: https://github.com/tomron-aws/sample-amazon-quick-suite-starter-kit/tree/terraform
+repo_name: sample-amazon-quick-suite-starter-kit
 
 theme:
   name: material
@@ -20,10 +20,8 @@ theme:
 nav:
   - Home: index.md
   - Getting Started: getting-started.md
-  - Operator Tools:
-    - Overview: operator-tools/index.md
-    - User Management Runbook: operator-tools/user-management-runbook.md
-    - Monitoring Runbook: operator-tools/monitoring-runbook.md
+  - Module Development: module-development-guide.md
+  - Accelerator Integration: accelerator-integration-guide.md
   - Cleanup: cleanup.md
 
 markdown_extensions:

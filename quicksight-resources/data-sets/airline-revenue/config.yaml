@@ -1,0 +1,16 @@
+name: airline-revenue
+version: 0.1.0
+status: ready
+iac_type: terraform
+dependencies:
+  - quicksight-resources/data-sources/s3-csv
+params:
+  - name: data_source_arn
+    required: false
+    type: string
+  - name: admin_pro_group_name
+    required: true
+    type: string
+  - name: dataset_name
+    required: false
+    default: airline-revenue

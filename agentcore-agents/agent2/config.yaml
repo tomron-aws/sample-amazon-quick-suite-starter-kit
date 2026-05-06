@@ -1,0 +1,6 @@
+name: agent2
+version: 0.1.0
+status: planned
+iac_type: config-only
+dependencies: []
+params: []

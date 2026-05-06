@@ -1,0 +1,14 @@
+name: group-assignments
+version: 0.1.0
+status: ready
+iac_type: terraform
+dependencies:
+  - governance/subscription
+params:
+  - name: admin_pro_group_name
+    required: true
+    type: string
+  - name: reader_pro_group_names
+    required: false
+    default: "[]"
+    type: json

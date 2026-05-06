@@ -1,0 +1,11 @@
+name: idp-accelerator
+version: 0.1.0
+status: preview
+iac_type: external
+dependencies:
+  - governance/subscription
+params:
+  - name: document_bucket
+    required: true
+    type: string
+    pattern: "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$"

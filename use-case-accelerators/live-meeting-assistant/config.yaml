@@ -1,0 +1,6 @@
+name: live-meeting-assistant
+version: 0.1.0
+status: planned
+iac_type: external
+dependencies: []
+params: []

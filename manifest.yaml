@@ -1,0 +1,41 @@
+# Quick Suite Starter Kit — Project Manifest
+# Consultants: edit this file to select modules for your customer engagement.
+#
+# Module status:
+#   ready   — production-ready, fully implemented
+#   preview — functional but not production-hardened, use with caution
+#   planned — not yet implemented, will error if selected
+
+project: my-quick-suite-deployment
+
+modules:
+  - governance/subscription                              # ready
+  - governance/permissions                               # ready
+  - governance/group-assignments                         # ready
+  - aws-resources                                        # ready
+  - quicksight-resources/data-sources/s3-csv             # ready
+  - quicksight-resources/data-sets/airline-revenue       # ready
+  - quicksight-resources/topics/airline-revenue          # ready
+  - quicksight-resources/dashboards/airline-revenue      # ready
+  - quicksight-resources/action-connectors/s3-automate   # ready
+  # - quicksight-resources/action-connectors/asana       # ready
+  # - quicksight-resources/action-connectors/confluence  # ready
+  # - quicksight-resources/action-connectors/bedrock-knowledge-base  # ready
+  # - quicksight-resources/topics/                       # planned
+  # - quicksight-resources/analyses/                     # planned
+  # - quicksight-resources/dashboards/                   # planned
+  # - governance/themes                                  # planned
+  # - use-case-accelerators/idp-accelerator@v1.0.0      # preview
+  # - use-case-accelerators/live-meeting-assistant@v1.0.0  # planned
+  # - agentcore-agents/agent1                            # planned
+  # - agentcore-agents/agent2                            # planned
+
+params:
+  account_name: AmazonQuickStarterKit-Terraform
+  notification_email: "tomron@amazon.com"
+  admin_pro_group_name: Tom-Test-Site-2
+  reader_pro_group_names: '["QuickSuiteStarterKit-ReaderPro"]'
+  bucket_name_prefix: quicksuite-data
+  csv_key: airline_revenue.csv
+  dataset_name: airline-revenue
+  region: us-east-1

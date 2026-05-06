@@ -1,27 +1,79 @@
 # Cleanup and Deletion
 
-This guide explains how to properly remove your Amazon Quick Suite deployment to avoid ongoing costs.
+How to remove your Quick Suite deployment.
 
-## Cleanup Process
+!!! warning "Data Loss"
 
-To remove all resources:
+    Destroying the QuickSight subscription deletes all dashboards, datasets, analyses, topics, and user configurations. This cannot be undone.
 
-1. **Delete the Quick Suite subscription** - Use the [Amazon QuickSight console](https://console.aws.amazon.com/quicksight/) or AWS CLI command `aws quicksight delete-account-subscription` to delete the subscription. This must be done before destroying the stack.
+## Cleanup Steps
 
-2. **Destroy the CDK stack** - Run `npm run cdk destroy` to remove the Lambda function, IAM roles, and other infrastructure.
+### 1. Destroy Terraform Resources
 
-3. **Remove IAM Identity Center groups** (optional) - Use the [IAM Identity Center console](https://console.aws.amazon.com/singlesignon) or AWS CLI to delete groups created during setup if no longer needed.
+From the `generated/` directory:
 
-## Important Notes
+```bash
+cd generated
+terraform destroy
+```
 
-The custom resource handler does not automatically delete the Quick Suite subscription during stack deletion to prevent accidental data loss. You must delete the subscription separately before running `npm run cdk destroy`.
+This removes all Terraform-managed resources in reverse dependency order:
 
-[AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/) groups are not automatically deleted and will remain in your Identity Center instance after stack deletion.
+- QuickSight dashboards, topics, datasets, data sources
+- S3 bucket and IAM roles
+- Custom permissions and role assignments
+- QuickSight account subscription
 
-## Next Steps
+!!! note "Topic Cleanup"
 
-After cleanup, you may want to:
+    Topics created via the AWS CLI provisioner are automatically deleted by the destroy provisioner.
 
-- Review your [AWS billing dashboard](https://console.aws.amazon.com/billing/) to confirm all charges have stopped
-- Remove any remaining CloudWatch log groups if desired
-- Delete the CDK bootstrap stack if you're not using CDK for other projects
+### 2. Delete the QuickSight Subscription (if not managed by Terraform)
+
+If the subscription was created outside of Terraform or the destroy didn't remove it:
+
+```bash
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+aws quicksight delete-account-subscription --aws-account-id "$ACCOUNT_ID"
+```
+
+### 3. Remove IAM Identity Center Groups (optional)
+
+Groups created during setup are not managed by Terraform. Remove them if no longer needed:
+
+```bash
+IDENTITY_STORE_ID="<your-identity-store-id>"
+
+# List groups
+aws identitystore list-groups --identity-store-id "$IDENTITY_STORE_ID"
+
+# Delete each group
+aws identitystore delete-group \
+  --identity-store-id "$IDENTITY_STORE_ID" \
+  --group-id <group-id>
+```
+
+### 4. Clean Up Local Files
+
+```bash
+rm -rf generated/
+```
+
+## Verifying Cleanup
+
+```bash
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+# Confirm subscription is gone
+aws quicksight describe-account-subscription \
+  --aws-account-id "$ACCOUNT_ID" 2>&1 | grep -q "ResourceNotFoundException" && \
+  echo "✓ Subscription deleted" || echo "⚠ Subscription still active"
+
+# Confirm S3 bucket is gone
+aws s3 ls | grep quicksuite-data && \
+  echo "⚠ Bucket still exists" || echo "✓ Bucket deleted"
+```
+
+## See Also
+
+- [Getting Started](getting-started.md) — deployment guide
