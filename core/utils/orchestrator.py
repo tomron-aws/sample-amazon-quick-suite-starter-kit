@@ -244,6 +244,13 @@ def generate_terraform(modules: list[str], manifest: dict) -> Path:
             if p["name"] not in all_params:
                 all_params[p["name"]] = p
 
+    # Detect if any module uses the AWSCC provider
+    needs_awscc = any(
+        "awscc_" in (Path(m.split("@")[0]) / "terraform" / "main.tf").read_text()
+        for m in modules
+        if (Path(m.split("@")[0]) / "terraform" / "main.tf").exists()
+    )
+
     # --- main.tf ---
     main_lines = [
         "# Auto-generated from manifest.yaml — do not edit manually.",
@@ -255,6 +262,15 @@ def generate_terraform(modules: list[str], manifest: dict) -> Path:
         '      source  = "hashicorp/aws"',
         '      version = "~> 6.0"',
         '    }',
+    ]
+    if needs_awscc:
+        main_lines += [
+            '    awscc = {',
+            '      source  = "hashicorp/awscc"',
+            '      version = "~> 1.0"',
+            '    }',
+        ]
+    main_lines += [
         '  }',
         '}',
         "",
@@ -263,6 +279,13 @@ def generate_terraform(modules: list[str], manifest: dict) -> Path:
         "}",
         "",
     ]
+    if needs_awscc:
+        main_lines += [
+            "provider \"awscc\" {",
+            "  region = var.region",
+            "}",
+            "",
+        ]
     # Build a map of module base path -> TF module name for depends_on
     mod_name_map = {}
     for mod in modules:

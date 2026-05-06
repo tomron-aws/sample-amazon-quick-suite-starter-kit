@@ -17,6 +17,7 @@ modules:
   - quicksight-resources/data-sets/airline-revenue       # ready
   - quicksight-resources/topics/airline-revenue          # ready
   - quicksight-resources/dashboards/airline-revenue      # ready
+  - quicksight-resources/action-connectors/s3-automate  # ready
   # - quicksight-resources/topics/                       # planned
   # - quicksight-resources/analyses/                     # planned
   # - quicksight-resources/dashboards/                   # planned

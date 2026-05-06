@@ -1,0 +1,16 @@
+name: s3-automate
+version: 0.1.0
+status: ready
+iac_type: terraform
+dependencies:
+  - aws-resources
+params:
+  - name: quicksight_role_arn
+    required: false
+    type: string
+  - name: action_connector_id
+    required: false
+    default: s3-automate
+  - name: action_connector_name
+    required: false
+    default: S3 Automate
